@@ -1,0 +1,125 @@
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { CreatePostRequest, CreateThreadRequest } from '../types';
+
+interface PostFormProps {
+  boardId?: string; // If present, creating thread
+  threadId?: string; // If present, replying
+  onSubmit: (data: any) => Promise<void>;
+  onCancel?: () => void;
+}
+
+export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit, onCancel }) => {
+  const { t } = useTranslation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [content, setContent] = useState('');
+
+  const isNewThread = !!boardId;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) {
+      alert(t('error.required'));
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      if (isNewThread) {
+        const payload: CreateThreadRequest = {
+          boardId: boardId!,
+          title: title.trim(),
+          name: name.trim() || undefined,
+          email: email.trim() || undefined,
+          content: content.trim()
+        };
+        await onSubmit(payload);
+      } else {
+        const payload: CreatePostRequest = {
+          threadId: threadId!,
+          name: name.trim() || undefined,
+          email: email.trim() || undefined,
+          content: content.trim()
+        };
+        await onSubmit(payload);
+        setContent(''); // Clear content on reply success
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-[#f0e0d6] p-4 border border-[#ccb] rounded shadow-sm max-w-2xl">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        {isNewThread && (
+          <div className="flex items-center">
+            <label className="w-20 text-sm font-bold text-[#800000]">{t('thread.title')}</label>
+            <input 
+              type="text" 
+              className="flex-1 p-1 border border-gray-400 text-sm"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+        )}
+        
+        <div className="flex items-center">
+          <label className="w-20 text-sm font-bold text-[#800000]">{t('thread.name')}</label>
+          <input 
+            type="text" 
+            className="flex-1 p-1 border border-gray-400 text-sm"
+            placeholder={t('meta.anonymous')}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center">
+          <label className="w-20 text-sm font-bold text-[#800000]">{t('thread.email')}</label>
+          <input 
+            type="text" 
+            className="flex-1 p-1 border border-gray-400 text-sm"
+            placeholder="sage"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-start">
+          <label className="w-20 text-sm font-bold text-[#800000] mt-1">{t('thread.content')}</label>
+          <textarea 
+            className="flex-1 p-1 border border-gray-400 text-sm font-mono h-32"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 mt-2">
+          {onCancel && (
+            <button 
+              type="button" 
+              onClick={onCancel}
+              className="px-4 py-1 bg-gray-200 border border-gray-400 text-sm hover:bg-gray-300"
+            >
+              {t('thread.return')}
+            </button>
+          )}
+          <button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="px-6 py-1 bg-[#dddddd] border border-gray-400 text-sm font-bold hover:bg-white active:bg-gray-300 disabled:opacity-50"
+          >
+            {isSubmitting ? t('meta.loading') : isNewThread ? t('thread.new') : t('thread.submit')}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};

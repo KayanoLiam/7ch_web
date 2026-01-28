@@ -1,0 +1,5 @@
+{
+  "name": "7ch - Anonymous BBS",
+  "description": "A feature-complete anonymous textboard with i18n, tripcodes, sage mechanism, and anchor tooltips.",
+  "requestFramePermissions": []
+}
