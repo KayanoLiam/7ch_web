@@ -5,6 +5,8 @@ import { Board, Thread } from './types';
 import { PostForm } from './components/PostForm';
 import { ThreadView } from './components/ThreadDetail';
 import { Button } from './components/ui/button';
+import { Link, Route, Routes, useNavigate } from "react-router-dom";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +18,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Docs } from './pages/Docs';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { Terms } from './pages/Terms';
+import { Help } from './pages/Help';
+import { QA } from './pages/QA';
 
 // View State Definition
 type ViewState =
@@ -24,6 +31,8 @@ type ViewState =
   | { type: 'board', boardId: string }
   | { type: 'thread', threadId: string, boardId: string }
   | { type: 'static', pageId: 'privacy' | 'tech' | 'terms' | 'help' };
+
+
 
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -163,19 +172,21 @@ const App: React.FC = () => {
             {/* <button className="hover:underline hidden sm:block">Login</button> */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline">Login</Button>
+                {/* <Button variant="outline">Login</Button> */}
+                <Button variant="outline">{t('dialog.login.button')}</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('dialog.login.title')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete your account
-                    from our servers.
+                    {t('dialog.login.description')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction>Continue</AlertDialogAction>
+                  <AlertDialogCancel>{t('dialog.login.close')}</AlertDialogCancel>
+                  <Link to="/docs">
+                    <AlertDialogAction>{t('dialog.login.link_text')}</AlertDialogAction>
+                  </Link>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -206,10 +217,16 @@ const App: React.FC = () => {
   const renderFooter = () => (
     <footer className="mt-auto py-8 text-center text-sm text-gray-500 border-t border-gray-200 bg-white">
       <div className="flex justify-center flex-wrap gap-4 sm:gap-6 mb-4">
-        <button onClick={() => setView({ type: 'static', pageId: 'privacy' })} className="hover:underline hover:text-[#0056b3]">{t('footer.privacy')}</button>
-        <button onClick={() => setView({ type: 'static', pageId: 'tech' })} className="hover:underline hover:text-[#0056b3]">{t('footer.tech')}</button>
-        <button onClick={() => setView({ type: 'static', pageId: 'terms' })} className="hover:underline hover:text-[#0056b3]">{t('footer.terms')}</button>
-        <button onClick={() => setView({ type: 'static', pageId: 'help' })} className="hover:underline hover:text-[#0056b3]">{t('footer.help')}</button>
+        <Link to="/privacy"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.privacy')}</button></Link>
+        {/* <button onClick={() => setView({ type: 'static', pageId: 'privacy' })} className="hover:underline hover:text-[#0056b3]">{t('footer.privacy')}</button> */}
+        {/* <button onClick={() => setView({ type: 'static', pageId: 'tech' })} className="hover:underline hover:text-[#0056b3]">{t('footer.tech')}</button> */}
+        <Link to="/docs"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.tech')}</button></Link>
+        <Link to="/terms"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.terms')}</button></Link>
+        {/* <button onClick={() => setView({ type: 'static', pageId: 'terms' })} className="hover:underline hover:text-[#0056b3]">{t('footer.terms')}</button> */}
+        {/* <button onClick={() => setView({ type: 'static', pageId: 'help' })} className="hover:underline hover:text-[#0056b3]">{t('footer.help')}</button> */}
+        <Link to="/help"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.help')}</button></Link>
+        <Link to="/QA"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.QA')}</button></Link>
+        {/* <button onClick={() => setView({ type: 'static', pageId: 'QA' })} className="hover:underline hover:text-[#0056b3]">{t('footer.QA')}</button> */}
       </div>
       <div>&copy; 2024 7ch Project. All rights reserved.</div>
     </footer>
@@ -426,28 +443,50 @@ const App: React.FC = () => {
       </div>
     );
   };
-
+const navigate = useNavigate();
   return (
-    <div className="min-h-screen font-sans bg-[#ffffff] text-[#333] flex flex-col">
-      {renderHeader()}
-      <main className="flex-1">
-        {view.type === 'home' && renderHome()}
-        {view.type === 'favorites' && renderFavorites()}
-        {view.type === 'board' && renderBoard(view.boardId)}
-        {view.type === 'thread' && (
-          <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] pt-4">
-            <ThreadView
-              threadId={view.threadId}
-              onBack={() => setView({ type: 'board', boardId: view.boardId })}
-              isFollowed={followedThreads.has(view.threadId)}
-              onToggleFollow={(e) => toggleFollow(e, view.threadId)}
-            />
-          </div>
-        )}
-        {view.type === 'static' && renderStaticPage(view.pageId)}
-      </main>
-      {renderFooter()}
-    </div>
+    
+    <Routes>
+      {/* 1. 独立的文档页面路由 */}
+      <Route
+        path="/docs"
+        element={
+          <Docs onBack={() => {
+            setView({ type: 'home' });
+            navigate('/'); // 关键：点击返回时，路由也要切回首页
+          }} />
+        }
+      />
+      <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
+      <Route path="/terms" element={<Terms onBack={() => navigate('/')} />} />
+      <Route path="/help" element={<Help onBack={() => navigate('/')} />} />
+      <Route path="/QA" element={<QA onBack={() => navigate('/')} />} />
+      
+      {/* 2. 所有其他路径，都渲染你的主应用逻辑 */}
+      <Route path="*" element={
+        <div className="min-h-screen font-sans bg-[#ffffff] text-[#333] flex flex-col">
+          {renderHeader()}
+          <main className="flex-1">
+            {view.type === 'home' && renderHome()}
+            {view.type === 'favorites' && renderFavorites()}
+            {view.type === 'board' && renderBoard(view.boardId)}
+            {view.type === 'thread' && (
+              <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] pt-4">
+                <ThreadView
+                  threadId={view.threadId}
+                  onBack={() => setView({ type: 'board', boardId: view.boardId })}
+                  isFollowed={followedThreads.has(view.threadId)}
+                  onToggleFollow={(e) => toggleFollow(e, view.threadId)}
+                />
+              </div>
+            )}
+            {/* 注意：这里的 static view 可能会和路由冲突，建议也把 static pages 改成真正的路由，或者保持现状 */}
+            {view.type === 'static' && renderStaticPage(view.pageId)}
+          </main>
+          {renderFooter()}
+        </div>
+      } />
+    </Routes>
   );
 };
 
