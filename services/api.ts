@@ -13,6 +13,7 @@ class RealService implements I7chAPI {
     const res = await fetch(`${this.baseUrl}${path}`, {
       ...init,
       headers,
+      cache: "no-store",
     });
 
     if (!res.ok) {

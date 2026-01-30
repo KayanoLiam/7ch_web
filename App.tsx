@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [view, setView] = useState<ViewState>({ type: 'home' });
   const [boards, setBoards] = useState<Board[]>([]);
+  const [boardsError, setBoardsError] = useState<string | null>(null);
 
   // Board View State
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -68,7 +69,18 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    api.getBoards().then(setBoards);
+    api.getBoards()
+      .then(setBoards)
+      .catch((e: any) => {
+        setBoardsError(String(e?.message ?? e) || '加载失败');
+        setBoards([
+          { id: 'all', name: 'board.all.name', description: 'board.all.desc' },
+          { id: 'news', name: 'board.news.name', description: 'board.news.desc' },
+          { id: 'g', name: 'board.g.name', description: 'board.g.desc' },
+          { id: 'acg', name: 'board.acg.name', description: 'board.acg.desc' },
+          { id: 'vip', name: 'board.vip.name', description: 'board.vip.desc' },
+        ]);
+      });
   }, []);
 
   useEffect(() => {
@@ -258,6 +270,11 @@ const App: React.FC = () => {
     <div className="p-4 max-w-4xl mx-auto mt-4">
       <div className="bg-white p-6 border border-gray-200 rounded-sm shadow-sm">
         <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">{t('nav.boards')}</h2>
+        {boardsError && (
+          <div className="mb-4 p-3 rounded border border-red-200 bg-red-100 text-red-700">
+            {t('meta.loading')}: {boardsError}
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {boards.map(b => (
             <div
