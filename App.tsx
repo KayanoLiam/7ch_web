@@ -39,6 +39,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<ViewState>({ type: 'home' });
   const [boards, setBoards] = useState<Board[]>([]);
   const [boardsError, setBoardsError] = useState<string | null>(null);
+  const [search, setSearch] = useState<string>('');
 
   // Board View State
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -174,6 +175,8 @@ const App: React.FC = () => {
               type="text"
               placeholder={t('board.catalog')}
               className="bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm w-48 focus:outline-none focus:border-gray-400"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
             <span className="absolute right-2 text-gray-400">🔍</span>
           </div>
@@ -276,7 +279,11 @@ const App: React.FC = () => {
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {boards.map(b => (
+          {(search.trim() ? boards.filter(b => {
+            const s = search.trim().toLowerCase();
+            const name = `${b.id} ${t(b.name)} ${t(b.description)}`.toLowerCase();
+            return name.includes(s);
+          }) : boards).map(b => (
             <div
               key={b.id}
               onClick={() => setView({ type: 'board', boardId: b.id })}
@@ -449,7 +456,11 @@ const App: React.FC = () => {
 
           {/* Feed List */}
           <div className="space-y-4">
-            {threads.map((thread) => {
+            {(search.trim() ? threads.filter((thread) => {
+              const s = search.trim().toLowerCase();
+              const text = `${thread.title} ${thread.opPost.content}`.toLowerCase();
+              return text.includes(s);
+            }) : threads).map((thread) => {
               // If we are in 'all' view, we want to see the specific board name for each thread
               const bObj = boards.find(b => b.id === thread.boardId);
               const displayBoardName = isAll ? (bObj ? t(bObj.name) : thread.boardId) : t(board.name);
