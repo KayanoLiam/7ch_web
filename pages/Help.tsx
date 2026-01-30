@@ -33,11 +33,11 @@ export const Help: React.FC<HelpProps> = ({ onBack }) => {
   };
 
   const navItems = [
-    { id: 'basics', label: '1. Basics' },
-    { id: 'tripcodes', label: '2. Tripcodes' },
-    { id: 'sage', label: '3. Sage Function' },
-    { id: 'anchors', label: '4. Anchors & Quotes' },
-    { id: 'ids', label: '5. ID System' },
+    { id: 'basics', label: t('help.toc.basics') },
+    { id: 'tripcodes', label: t('help.toc.tripcodes') },
+    { id: 'sage', label: t('help.toc.sage') },
+    { id: 'anchors', label: t('help.toc.anchors') },
+    { id: 'ids', label: t('help.toc.ids') },
   ];
 
   return (
@@ -45,8 +45,8 @@ export const Help: React.FC<HelpProps> = ({ onBack }) => {
       {/* Header Banner */}
       <div className="bg-[#5d4037] text-white py-10 px-4 mb-6 shadow-sm">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">User Guide</h1>
-          <p className="opacity-90">How to use 7ch effectively</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">{t('help.banner.title')}</h1>
+          <p className="opacity-90">{t('help.banner.subtitle')}</p>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ export const Help: React.FC<HelpProps> = ({ onBack }) => {
         {/* Sidebar Nav (Desktop) */}
         <aside className="hidden md:block w-64 flex-shrink-0">
           <div className="sticky top-20 bg-white rounded shadow-sm border border-gray-200 p-4">
-            <div className="font-bold text-gray-900 mb-4 px-2">Table of Contents</div>
+            <div className="font-bold text-gray-900 mb-4 px-2">{t('help.toc.title')}</div>
             <nav className="space-y-1">
               {navItems.map(item => (
                 <button
@@ -72,7 +72,7 @@ export const Help: React.FC<HelpProps> = ({ onBack }) => {
             </nav>
             <div className="mt-6 pt-4 border-t border-gray-100">
               <button onClick={onBack} className="text-sm text-[#0056b3] hover:underline flex items-center gap-1 px-2">
-                &larr; Back to App
+                &larr; {t('nav.home')}
               </button>
             </div>
           </div>
@@ -81,86 +81,85 @@ export const Help: React.FC<HelpProps> = ({ onBack }) => {
         {/* Mobile Nav / Back */}
         <div className="md:hidden mb-4">
           <button onClick={onBack} className="text-[#0056b3] hover:underline font-bold">
-            &larr; Back to App
+            &larr; {t('nav.home')}
           </button>
         </div>
 
         {/* Main Content */}
         <main className="flex-1 bg-white p-6 md:p-10 rounded shadow-sm border border-gray-200 min-h-[500px]">
           
-          <Section id="basics" title="1. The Basics">
+          <Section id="basics" title={t('help.section.basics')}>
             <p>
-              7ch is an anonymous textboard. You do not need to register an account to post. 
-              Navigation relies on a simple hierarchy: <strong>Boards</strong> contain <strong>Threads</strong>, and Threads contain <strong>Posts</strong>.
+              {t('help.basics.intro')}
             </p>
             <ul className="list-disc list-inside pl-2 space-y-2 mt-2">
-              <li><strong>Posting:</strong> Anyone can create a thread (Start a discussion) or reply to an existing one.</li>
-              <li><strong>Anonymity:</strong> By default, your name is displayed as "Anonymous" (or "名無しさん").</li>
+              <li><strong>{t('help.basics.posting')}</strong></li>
+              <li><strong>{t('help.basics.anonymity')}</strong></li>
             </ul>
           </Section>
 
-          <Section id="tripcodes" title="2. Tripcodes (Identity)">
+          <Section id="tripcodes" title={t('help.section.tripcodes')}>
             <p>
-              If you need to prove your identity across multiple posts without registering, use a <strong>Tripcode</strong>.
+              {t('help.tripcodes.intro')}
             </p>
             <div className="bg-gray-50 p-4 border border-gray-200 rounded mt-2">
-              <h4 className="font-bold text-sm text-gray-700 mb-2">How to use:</h4>
+              <h4 className="font-bold text-sm text-gray-700 mb-2">{t('help.tripcodes.how')}</h4>
               <p className="text-sm">
-                In the Name field, enter: <KeyTag>Name#password</KeyTag>
+                {t('help.tripcodes.how-desc')} <KeyTag>Name#password</KeyTag>
               </p>
               <p className="text-sm mt-2 text-gray-600">
-                Example: Entering <code>Alice#secret123</code> will display as <code>Alice ◆AbC123x</code>.
+                {t('help.tripcodes.example-desc')}
               </p>
             </div>
             <p className="mt-2 text-sm text-gray-500">
-              Only you know the password (the part after #), but everyone can verify the resulting hash (the part after ◆) is the same.
+              {t('help.tripcodes.note')}
             </p>
           </Section>
 
-          <Section id="sage" title="3. The 'Sage' Function">
+          <Section id="sage" title={t('help.section.sage')}>
             <p>
-              By default, replying to a thread "bumps" it to the top of the board index, increasing its visibility.
+              {t('help.sage.intro')}
             </p>
             <p>
-              If you want to reply without bumping the thread (e.g., for a minor correction or to avoid bumping a trolling thread), put <KeyTag>sage</KeyTag> in the <strong>E-mail</strong> field.
+              {t('help.sage.how')} <KeyTag>sage</KeyTag>
             </p>
             <ul className="list-disc list-inside pl-2 space-y-1 mt-2 text-sm">
-              <li><strong>Normal Post:</strong> Thread Updated time changes -&gt; Moves to top.</li>
-              <li><strong>Sage Post:</strong> Thread Updated time does <em>not</em> change -&gt; Stays in place.</li>
+              <li><strong>{t('help.sage.normal')}</strong></li>
+              <li><strong>{t('help.sage.sage-post')}</strong></li>
             </ul>
           </Section>
 
-          <Section id="anchors" title="4. Anchors & Quotes">
+          <Section id="anchors" title={t('help.section.anchors')}>
             <p>
-              To reply to a specific post, use the <code>&gt;&gt;</code> symbol followed by the post number.
+              {t('help.anchors.intro')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
               <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                <span className="font-bold text-xs text-gray-500 block mb-1">Input</span>
+                <span className="font-bold text-xs text-gray-500 block mb-1">{t('help.anchors.input')}</span>
                 <code className="text-sm">I agree with &gt;&gt;1 completely.</code>
               </div>
               <div className="p-3 bg-white border border-gray-200 rounded shadow-sm">
-                <span className="font-bold text-xs text-gray-500 block mb-1">Result</span>
+                <span className="font-bold text-xs text-gray-500 block mb-1">{t('help.anchors.result')}</span>
                 <span className="text-sm">I agree with <span className="text-[#0056b3] hover:underline cursor-pointer">&gt;&gt;1</span> completely.</span>
               </div>
             </div>
             <p className="mt-2">
-              On 7ch, hovering over a blue anchor link (like <span className="text-[#0056b3]">&gt;&gt;15</span>) will show a popup preview of that post. Clicking it typically adds a reverse-link or jumps to the post.
+              {t('help.anchors.hover')}
             </p>
           </Section>
 
-          <Section id="ids" title="5. Daily ID System">
+          <Section id="ids" title={t('help.section.ids')}>
             <p>
-              Instead of usernames, we use <strong>IDs</strong> to track unique users within a single thread for a single day.
+              {t('help.ids.intro')}
             </p>
             <div className="flex items-center gap-2 mt-2">
-               <span className="text-sm font-bold text-gray-600">Example ID:</span>
+               <span className="text-sm font-bold text-gray-600">{t('help.ids.example')}</span>
                <span className="font-mono bg-gray-100 px-2 py-1 rounded">ID:A1b2C3d4</span>
             </div>
             <ul className="list-disc list-inside pl-2 space-y-2 mt-3 text-sm">
-              <li><strong>Scope:</strong> Your ID is unique to you, the specific board, and the current date.</li>
-              <li><strong>Reset:</strong> IDs change every day at midnight (UTC).</li>
-              <li><strong>Privacy:</strong> This prevents long-term tracking while allowing users to identify if multiple posts in a thread are from the same person that day.</li>
+              <li><strong>{t('help.ids.scope')}</strong></li>
+              <li><strong>{t('help.ids.reset')}</strong></li>
+              <li><strong>{t('help.ids.privacy')}</strong></li>
             </ul>
           </Section>
 
