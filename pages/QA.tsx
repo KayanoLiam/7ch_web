@@ -147,7 +147,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="report" title="Q: 发现违法/侵权内容如何处理？">
             <p>
-              <strong>A:</strong> 请发送邮件至 <a href="mailto:admin-7ch@proton.me" className="text-[#0056b3] hover:underline">admin-7ch@proton.me</a>。
+              <strong>A:</strong> 请发送邮件至 <a href="mailto:Piercekaoru@proton.me" className="text-[#0056b3] hover:underline">Piercekaoru@proton.me</a>。
             </p>
             <p>
               为了您的安全，建议您同样使用匿名邮箱进行联系。请在邮件中注明 Thread ID 和具体的违规理由，管理员会定期处理。
