@@ -45,7 +45,7 @@ interface DBSchema {
   posts: Record<string, Post[]>; // threadId -> posts
 }
 
-class MockService implements I7chAPI {
+export class MockService implements I7chAPI {
   private db: DBSchema;
 
   constructor() {
@@ -225,4 +225,4 @@ class MockService implements I7chAPI {
   }
 }
 
-export const api = new MockService();
+export const mockApi = new MockService();

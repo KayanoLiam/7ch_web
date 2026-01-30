@@ -24,7 +24,7 @@ export interface Thread {
   updatedAt: string; // For sorting (bump)
   createdAt: string;
   opPost: Post; // Preview of the first post
-}
+}  
 
 export interface ThreadDetail extends Thread {
   posts: Post[];

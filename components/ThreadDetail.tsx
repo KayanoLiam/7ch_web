@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api } from '../services/mockService';
+import { api } from '../services/api';
 import { ThreadDetail, Post } from '../types';
 import { PostForm } from './PostForm';
 

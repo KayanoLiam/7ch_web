@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api } from './services/mockService';
+import { api } from './services/api';
 import { Board, Thread } from './types';
 import { PostForm } from './components/PostForm';
 import { ThreadView } from './components/ThreadDetail';

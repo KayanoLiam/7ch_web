@@ -64,8 +64,8 @@ export const Docs: React.FC<DocsProps> = ({ onBack }) => {
                                     key={item.id}
                                     onClick={() => scrollTo(item.id)}
                                     className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${activeSection === item.id
-                                            ? 'bg-[#e0f2f1] text-[#00695c] font-bold'
-                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        ? 'bg-[#e0f2f1] text-[#00695c] font-bold'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                         }`}
                                 >
                                     {item.label}
