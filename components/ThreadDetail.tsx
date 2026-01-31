@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { ThreadDetail, Post } from '../types';
@@ -12,7 +12,6 @@ interface RichTextProps {
 }
 
 const RichText: React.FC<RichTextProps> = ({ content, allPosts, onQuoteClick }) => {
-  // Regex to find >>Number
   const parts = content.split(/(>>\d+)/g);
   const [hoveredPost, setHoveredPost] = useState<Post | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -41,7 +40,6 @@ const RichText: React.FC<RichTextProps> = ({ content, allPosts, onQuoteClick }) 
               >
                 {part}
               </button>
-              {/* Tooltip */}
               {hoveredPost && hoveredPost.id === targetId && (
                  <div 
                    className="fixed z-50 bg-white border border-gray-400 p-3 text-xs shadow-xl rounded max-w-md pointer-events-none text-left"
@@ -72,20 +70,16 @@ const SinglePost: React.FC<{ post: Post, allPosts: Post[], onReply: (id: number)
   const { t, i18n } = useTranslation();
   const d = new Date(post.createdAt);
   
-  // Date formatting with i18n support
   let dateStr;
   const isJa = i18n.language === 'ja-JP';
 
   if (isJa) {
     const days = ['日', '月', '火', '水', '木', '金', '土'];
     const day = days[d.getDay()];
-    
     let y = d.getFullYear().toString();
-    // Simple Era logic
-    if (d.getFullYear() >= 2019) y = 'R' + (d.getFullYear() - 2018); // Reiwa
-    else if (d.getFullYear() >= 1989) y = 'H' + (d.getFullYear() - 1988); // Heisei
-    else if (d.getFullYear() >= 1926) y = 'S' + (d.getFullYear() - 1925); // Showa
-    
+    if (d.getFullYear() >= 2019) y = 'R' + (d.getFullYear() - 2018);
+    else if (d.getFullYear() >= 1989) y = 'H' + (d.getFullYear() - 1988);
+    else if (d.getFullYear() >= 1926) y = 'S' + (d.getFullYear() - 1925);
     dateStr = `${y}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}(${day}) ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}.00`;
   } else {
     const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -96,7 +90,6 @@ const SinglePost: React.FC<{ post: Post, allPosts: Post[], onReply: (id: number)
 
   return (
     <div className="bg-white p-4 mb-3 border-b border-gray-200 sm:rounded-sm sm:shadow-sm sm:border" id={`p${post.id}`}>
-      {/* Post Header */}
       <div className="flex flex-wrap items-baseline text-sm mb-3 text-gray-600 gap-2">
         <span className="font-bold text-black">{post.id}</span>
         <span className="font-bold text-[#333]">
@@ -105,13 +98,10 @@ const SinglePost: React.FC<{ post: Post, allPosts: Post[], onReply: (id: number)
         </span>
         <span className="text-xs">{dateStr}</span>
         <span className="text-xs">ID:{post.uid}</span>
-        
         <div className="ml-auto text-xs flex gap-2">
            <button onClick={() => onReply(post.id)} className="text-[#0056b3] hover:underline">[Reply]</button>
         </div>
       </div>
-
-      {/* Post Body */}
       <div className="pl-0 sm:pl-2">
         <RichText content={post.content} allPosts={allPosts} onQuoteClick={onReply} />
       </div>
@@ -130,7 +120,7 @@ interface ThreadViewProps {
 export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFollowed, onToggleFollow }) => {
   const { t } = useTranslation();
   const [data, setData] = useState<ThreadDetail | null>(null);
-  const [formKey, setFormKey] = useState(0); // Force re-render form on submit
+  const [formKey, setFormKey] = useState(0);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
   const loadData = async () => {
@@ -144,7 +134,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 10000); // Auto refresh every 10s
+    const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, [threadId]);
 
@@ -152,16 +142,11 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
     await api.createPost(payload);
     await loadData();
     setFormKey(k => k + 1);
-    // Scroll to bottom
     setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
-    // Note: We might want to keep the form open after reply, or close it. 
-    // Usually on BBS, you might reply again, so keeping it open or resetting is fine.
-    // Let's keep it open but clear content (handled by PostForm key reset).
   };
 
   const insertQuote = (id: number) => {
     setShowReplyForm(true);
-    // Use setTimeout to wait for the form to render
     setTimeout(() => {
       const textarea = document.querySelector('textarea');
       if (textarea) {
@@ -174,7 +159,6 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
         textarea.dispatchEvent(ev);
         textarea.focus();
       }
-      // Smooth scroll to form
       const form = document.getElementById('reply-form');
       if(form) form.scrollIntoView({ behavior: 'smooth' });
     }, 100);
@@ -184,7 +168,6 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
 
   return (
     <div className="max-w-4xl mx-auto pb-20 px-0 sm:px-2">
-      {/* Back & Title Header */}
       <div className="bg-white mb-4 p-4 border-b border-gray-200 sm:rounded-sm sm:shadow-sm">
         <div className="flex items-center text-xs text-gray-500 mb-2">
             <button onClick={onBack} className="text-[#0056b3] hover:underline mr-2">
@@ -192,9 +175,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
             </button>
             <span>/ {data.boardId} /</span>
         </div>
-        
         <h1 className="text-xl md:text-2xl font-bold text-[#333] mb-2">{data.title}</h1>
-        
         <div className="flex items-center gap-4 text-xs font-bold text-gray-500 mt-2">
             <span className="flex items-center gap-1 text-[#d32f2f]">
                 <span>💬</span> {data.postCount}
@@ -210,8 +191,6 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
             </button>
         </div>
       </div>
-
-      {/* Posts */}
       <div className="space-y-0 sm:space-y-4">
         {data.posts.map(post => (
           <SinglePost 
@@ -222,8 +201,6 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
           />
         ))}
       </div>
-
-      {/* Reply Form */}
       <div className="mt-6 pt-4 bg-white p-4 border-t border-gray-200 sm:rounded-sm shadow-sm" id="reply-form">
          {!showReplyForm ? (
             <div className="flex justify-center">
