@@ -5,6 +5,7 @@ import { Board, Thread } from './types';
 import { PostForm } from './components/PostForm';
 import { ThreadView } from './components/ThreadDetail';
 import { Button } from './components/ui/button';
+import { DonateModal } from './components/DonateModal';
 import { Link, Route, Routes, useNavigate } from "react-router-dom";
 
 import {
@@ -68,6 +69,9 @@ const App: React.FC = () => {
       return new Set();
     }
   });
+
+  // Donate Modal State
+  const [showDonateModal, setShowDonateModal] = useState(false);
 
   useEffect(() => {
     api.getBoards()
@@ -241,6 +245,7 @@ const App: React.FC = () => {
         {/* <button onClick={() => setView({ type: 'static', pageId: 'help' })} className="hover:underline hover:text-[#0056b3]">{t('footer.help')}</button> */}
         <Link to="/help"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.help')}</button></Link>
         <Link to="/QA"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.QA')}</button></Link>
+        <button className="text-gray-500 hover:underline hover:text-[#0056b3]" onClick={() => setShowDonateModal(true)}>{t('footer.donate')}</button>
         {/* <button onClick={() => setView({ type: 'static', pageId: 'QA' })} className="hover:underline hover:text-[#0056b3]">{t('footer.QA')}</button> */}
       </div>
       <div>&copy; 2024 7ch Project. All rights reserved.</div>
@@ -471,50 +476,53 @@ const App: React.FC = () => {
       </div>
     );
   };
-const navigate = useNavigate();
+  const navigate = useNavigate();
   return (
-    
-    <Routes>
-      {/* 1. 独立的文档页面路由 */}
-      <Route
-        path="/docs"
-        element={
-          <Docs onBack={() => {
-            setView({ type: 'home' });
-            navigate('/'); // 关键：点击返回时，路由也要切回首页
-          }} />
-        }
-      />
-      <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
-      <Route path="/terms" element={<Terms onBack={() => navigate('/')} />} />
-      <Route path="/help" element={<Help onBack={() => navigate('/')} />} />
-      <Route path="/QA" element={<QA onBack={() => navigate('/')} />} />
-      
-      {/* 2. 所有其他路径，都渲染你的主应用逻辑 */}
-      <Route path="*" element={
-        <div className="min-h-screen font-sans bg-[#ffffff] text-[#333] flex flex-col">
-          {renderHeader()}
-          <main className="flex-1">
-            {view.type === 'home' && renderHome()}
-            {view.type === 'favorites' && renderFavorites()}
-            {view.type === 'board' && renderBoard(view.boardId)}
-            {view.type === 'thread' && (
-              <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] pt-4">
-                <ThreadView
-                  threadId={view.threadId}
-                  onBack={() => setView({ type: 'board', boardId: view.boardId })}
-                  isFollowed={followedThreads.has(view.threadId)}
-                  onToggleFollow={(e) => toggleFollow(e, view.threadId)}
-                />
-              </div>
-            )}
-            {/* 注意：这里的 static view 可能会和路由冲突，建议也把 static pages 改成真正的路由，或者保持现状 */}
-            {view.type === 'static' && renderStaticPage(view.pageId)}
-          </main>
-          {renderFooter()}
-        </div>
-      } />
-    </Routes>
+    <>
+      <Routes>
+        {/* 1. 独立的文档页面路由 */}
+        <Route
+          path="/docs"
+          element={
+            <Docs onBack={() => {
+              setView({ type: 'home' });
+              navigate('/'); // 关键：点击返回时，路由也要切回首页
+            }} />
+          }
+        />
+        <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
+        <Route path="/terms" element={<Terms onBack={() => navigate('/')} />} />
+        <Route path="/help" element={<Help onBack={() => navigate('/')} />} />
+        <Route path="/QA" element={<QA onBack={() => navigate('/')} />} />
+
+        {/* 2. 所有其他路径，都渲染你的主应用逻辑 */}
+        <Route path="*" element={
+          <div className="min-h-screen font-sans bg-[#ffffff] text-[#333] flex flex-col">
+            {renderHeader()}
+            <main className="flex-1">
+              {view.type === 'home' && renderHome()}
+              {view.type === 'favorites' && renderFavorites()}
+              {view.type === 'board' && renderBoard(view.boardId)}
+              {view.type === 'thread' && (
+                <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] pt-4">
+                  <ThreadView
+                    threadId={view.threadId}
+                    onBack={() => setView({ type: 'board', boardId: view.boardId })}
+                    isFollowed={followedThreads.has(view.threadId)}
+                    onToggleFollow={(e) => toggleFollow(e, view.threadId)}
+                  />
+                </div>
+              )}
+              {/* 注意：这里的 static view 可能会和路由冲突，建议也把 static pages 改成真正的路由，或者保持现状 */}
+              {view.type === 'static' && renderStaticPage(view.pageId)}
+            </main>
+            {renderFooter()}
+          </div>
+        } />
+      </Routes>
+
+      <DonateModal open={showDonateModal} onClose={() => setShowDonateModal(false)} />
+    </>
   );
 };
 
