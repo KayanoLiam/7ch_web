@@ -1,1 +1,1 @@
-{"rewrites": [{"source": "/api/:path*", "destination": "https://7ch-api.render.com/api/:path*"}, {"source": "/(.*)", "destination": "/index.html"}]}
+{"rewrites": [{"source": "/api/:path*", "destination": "https://7ch-api.render.com/api/:path*"}, {"source": "/(.*)", "destination": "/index.html"}], "redirects": [{"source": "/test/read.cgi/:boardId/:threadId", "destination": "/board/:boardId/thread/:threadId", "statusCode": 301}]}
