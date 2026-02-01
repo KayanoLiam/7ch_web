@@ -87,7 +87,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
           
           <Section id="access" title={t('qa.q1.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q1.answer1')}
+              {t('qa.q1.answer1')}
             </p>
             <p>
               {t('qa.q1.answer2')}
@@ -96,7 +96,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="anonymity" title={t('qa.q2.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q2.answer1')}
+              {t('qa.q2.answer1')}
             </p>
             <p>
               {t('qa.q2.answer2')}
@@ -105,7 +105,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="identity" title={t('qa.q3.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q3.answer1')}
+              {t('qa.q3.answer1')}
             </p>
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
               <p className="text-sm text-yellow-800">
@@ -116,7 +116,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="privacy" title={t('qa.q4.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q4.answer1')}
+              {t('qa.q4.answer1')}
             </p>
             <p>
               {t('qa.q4.answer2')}
@@ -125,7 +125,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="opensource" title={t('qa.q5.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q5.answer1')}
+              {t('qa.q5.answer1')}
             </p>
             <p>
               {t('qa.q5.answer2')}
@@ -134,7 +134,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="deletion" title={t('qa.q6.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q6.answer1')}
+              {t('qa.q6.answer1')}
             </p>
             <p>
               {t('qa.q6.answer2')}
@@ -143,7 +143,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="report" title={t('qa.q7.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q7.answer1')} <a href="mailto:Piercekaoru@proton.me" className="text-[#0056b3] hover:underline">Piercekaoru@proton.me</a>。
+              {t('qa.q7.answer1')} <a href="mailto:Piercekaoru@proton.me" className="text-[#0056b3] hover:underline">Piercekaoru@proton.me</a>。
             </p>
             <p>
               {t('qa.q7.answer2')}
@@ -152,7 +152,7 @@ export const QA: React.FC<QAProps> = ({ onBack }) => {
 
           <Section id="legal" title={t('qa.q8.question')}>
             <p>
-              <strong>A:</strong> {t('qa.q8.answer1')}
+              {t('qa.q8.answer1')}
             </p>
             <p>
               {t('qa.q8.answer2')}
