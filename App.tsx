@@ -528,8 +528,8 @@ const App: React.FC = () => {
     
     {/* Mobile Login Dialog */}
     {showMobileLoginDialog && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:hidden">
-        <div className="bg-white rounded p-6 max-w-sm w-full">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4 md:hidden">
+        <div className="bg-white rounded p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto">
           <h3 className="font-bold text-lg mb-2">{t('dialog.login.title')}</h3>
           <p className="text-sm mb-4">{t('dialog.login.description')}</p>
           <div className="flex justify-end gap-2">
@@ -539,7 +539,7 @@ const App: React.FC = () => {
             >
               {t('dialog.login.close')}
             </button>
-            <Link to="/docs">
+            <Link to="/docs" onClick={() => setShowMobileLoginDialog(false)}>
               <button className="px-4 py-2 bg-[#0056b3] text-white rounded text-sm">
                 {t('dialog.login.link_text')}
               </button>
