@@ -359,6 +359,8 @@ const App: React.FC = () => {
 
   // Donate Modal State
   const [showDonateModal, setShowDonateModal] = useState(false);
+  // Mobile Menu State
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     api.getBoards()
@@ -425,7 +427,8 @@ const App: React.FC = () => {
             />
             <span className="absolute right-2 text-gray-400">🔍</span>
           </div>
-          <div className="flex items-center gap-3 text-sm text-[#0056b3] font-medium">
+          {/* Desktop navigation - hidden on mobile */}
+          <div className="hidden md:flex items-center gap-3 text-sm text-[#0056b3] font-medium">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline">{t('dialog.login.button')}</Button>
@@ -463,6 +466,77 @@ const App: React.FC = () => {
                 </button>
               ))}
             </div>
+          </div>
+          {/* Mobile dropdown menu */}
+          <div className="md:hidden relative">
+            <button 
+              className="text-[#0056b3] text-sm font-medium p-2"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+              ☰
+            </button>
+            {showMobileMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-50">
+                <div className="py-1">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button 
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                        onClick={() => setShowMobileMenu(false)}
+                      >
+                        {t('dialog.login.button')}
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t('dialog.login.title')}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t('dialog.login.description')}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t('dialog.login.close')}</AlertDialogCancel>
+                        <Link to="/docs">
+                          <AlertDialogAction>{t('dialog.login.link_text')}</AlertDialogAction>
+                        </Link>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <button 
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t border-gray-200"
+                    onClick={() => {
+                      navigate('/');
+                      setShowMobileMenu(false);
+                    }}
+                  >
+                    {t('nav.boards')}
+                  </button>
+                  <button 
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                    onClick={() => {
+                      navigate('/favorites');
+                      setShowMobileMenu(false);
+                    }}
+                  >
+                    {t('nav.favorites')}
+                  </button>
+                  <div className="border-t border-gray-200 pt-1">
+                    {['zh-CN', 'ja-JP'].map(l => (
+                      <button
+                        key={l}
+                        onClick={() => {
+                          changeLang(l);
+                          setShowMobileMenu(false);
+                        }}
+                        className={`block w-full text-left px-4 py-2 text-sm ${i18n.language === l ? 'font-bold text-black' : 'text-gray-400'}`}
+                      >
+                        {l === 'zh-CN' ? '中文' : '日'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
