@@ -361,6 +361,8 @@ const App: React.FC = () => {
   const [showDonateModal, setShowDonateModal] = useState(false);
   // Mobile Menu State
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  // Mobile Login Dialog State
+  const [showMobileLoginDialog, setShowMobileLoginDialog] = useState(false);
 
   useEffect(() => {
     api.getBoards()
@@ -478,30 +480,12 @@ const App: React.FC = () => {
             {showMobileMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-50">
                 <div className="py-1">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button 
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                        onClick={() => setShowMobileMenu(false)}
-                      >
-                        {t('dialog.login.button')}
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t('dialog.login.title')}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t('dialog.login.description')}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t('dialog.login.close')}</AlertDialogCancel>
-                        <Link to="/docs">
-                          <AlertDialogAction>{t('dialog.login.link_text')}</AlertDialogAction>
-                        </Link>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <button 
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                    onClick={() => setShowMobileLoginDialog(true)}
+                  >
+                    {t('dialog.login.button')}
+                  </button>
                   <button 
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t border-gray-200"
                     onClick={() => {
@@ -541,6 +525,29 @@ const App: React.FC = () => {
         </div>
       </div>
     </header>
+    
+    {/* Mobile Login Dialog */}
+    {showMobileLoginDialog && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:hidden">
+        <div className="bg-white rounded p-6 max-w-sm w-full">
+          <h3 className="font-bold text-lg mb-2">{t('dialog.login.title')}</h3>
+          <p className="text-sm mb-4">{t('dialog.login.description')}</p>
+          <div className="flex justify-end gap-2">
+            <button 
+              className="px-4 py-2 border border-gray-300 rounded text-sm"
+              onClick={() => setShowMobileLoginDialog(false)}
+            >
+              {t('dialog.login.close')}
+            </button>
+            <Link to="/docs">
+              <button className="px-4 py-2 bg-[#0056b3] text-white rounded text-sm">
+                {t('dialog.login.link_text')}
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )}
   );
 
   const renderFooter = () => (
