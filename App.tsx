@@ -104,7 +104,7 @@ const BoardView: React.FC<{
           </div>
           <div className="mb-3">
             <a className="text-[#0056b3] text-sm break-all hover:underline" href={`/board/${thread.boardId}/thread/${thread.id}`}>
-              https://7ch.net/board/{thread.boardId}/thread/{thread.id}/
+              https://7ch-web.vercel.app/board/{thread.boardId}/thread/{thread.id}/
             </a>
           </div>
           <div className="flex items-center gap-4 text-xs font-bold text-gray-600">
@@ -255,7 +255,7 @@ const FavoritesView: React.FC<{
           </div>
           <div className="mb-3">
             <a className="text-[#0056b3] text-sm break-all hover:underline" href={`/board/${thread.boardId}/thread/${thread.id}`}>
-              https://7ch.net/board/{thread.boardId}/thread/{thread.id}/
+              https://7ch-web.vercel.app/board/{thread.boardId}/thread/{thread.id}/
             </a>
           </div>
           <div className="flex items-center gap-4 text-xs font-bold text-gray-600">
