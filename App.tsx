@@ -103,7 +103,7 @@ const BoardView: React.FC<{
             {thread.opPost.content.length > 200 ? thread.opPost.content.substring(0, 200) + '...' : thread.opPost.content}
           </div>
           <div className="mb-3">
-            <a className="text-[#0056b3] text-sm break-all hover:underline" href="#" onClick={(e) => { e.preventDefault(); onThreadClick(thread); }}>
+            <a className="text-[#0056b3] text-sm break-all hover:underline" href={`/board/${thread.boardId}/thread/${thread.id}`}>
               https://7ch.net/board/{thread.boardId}/thread/{thread.id}/
             </a>
           </div>
@@ -254,7 +254,7 @@ const FavoritesView: React.FC<{
             {thread.opPost.content.length > 200 ? thread.opPost.content.substring(0, 200) + '...' : thread.opPost.content}
           </div>
           <div className="mb-3">
-            <a className="text-[#0056b3] text-sm break-all hover:underline" href="#" onClick={(e) => { e.preventDefault(); onThreadClick(thread); }}>
+            <a className="text-[#0056b3] text-sm break-all hover:underline" href={`/board/${thread.boardId}/thread/${thread.id}`}>
               https://7ch.net/board/{thread.boardId}/thread/{thread.id}/
             </a>
           </div>
