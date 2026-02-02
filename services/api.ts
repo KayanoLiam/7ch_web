@@ -1,8 +1,8 @@
-import { Board, CreatePostRequest, CreateThreadRequest, I7chAPI, Post, Thread, ThreadDetail } from "../types";
+import { Board, CreatePostRequest, CreateThreadRequest, I7chAPI, PaginatedThreads, Post, Thread, ThreadDetail } from "../types";
 import { mockApi } from "./mockService";
 
 class RealService implements I7chAPI {
-  constructor(private readonly baseUrl: string) {}
+  constructor(private readonly baseUrl: string) { }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     const headers = new Headers(init?.headers);
@@ -27,9 +27,9 @@ class RealService implements I7chAPI {
     return this.request<Board[]>("/api/boards");
   }
 
-  getThreads(boardId: string, page: number = 1): Promise<Thread[]> {
+  getThreads(boardId: string, page: number = 1): Promise<PaginatedThreads> {
     const params = new URLSearchParams({ boardId, page: String(page) });
-    return this.request<Thread[]>(`/api/threads?${params.toString()}`);
+    return this.request<PaginatedThreads>(`/api/threads?${params.toString()}`);
   }
 
   getThreadContent(threadId: string, afterPostId?: number): Promise<ThreadDetail> {

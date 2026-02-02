@@ -46,10 +46,19 @@ export interface CreatePostRequest {
   content: string;
 }
 
+// Pagination Response
+export interface PaginatedThreads {
+  threads: Thread[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 // The Contract
 export interface I7chAPI {
   getBoards(): Promise<Board[]>;
-  getThreads(boardId: string, page?: number): Promise<Thread[]>;
+  getThreads(boardId: string, page?: number): Promise<PaginatedThreads>;
   getThreadContent(threadId: string, afterPostId?: number): Promise<ThreadDetail>;
   createThread(payload: CreateThreadRequest): Promise<string>; // returns threadId
   createPost(payload: CreatePostRequest): Promise<Post>;

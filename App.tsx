@@ -7,6 +7,7 @@ import { PostForm } from './components/PostForm';
 import { ThreadView } from './components/ThreadDetail';
 import { Button } from './components/ui/button';
 import { DonateModal } from './components/DonateModal';
+import { Pagination } from './components/Pagination';
 
 import {
   AlertDialog,
@@ -41,12 +42,97 @@ const BoardView: React.FC<{
   const [threads, setThreads] = useState<Thread[]>([]);
   const [showPostForm, setShowPostForm] = useState(false);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Device detection
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Infinite scroll ref
+  const loadMoreRef = React.useRef<HTMLDivElement>(null);
+  const observerRef = React.useRef<IntersectionObserver | null>(null);
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Load threads function
+  const loadThreads = async (page: number, append: boolean = false) => {
+    if (loading || !boardId) return;
+    setLoading(true);
+
+    try {
+      const data = await api.getThreads(boardId, page);
+      if (append) {
+        setThreads(prev => [...prev, ...data.threads]);
+      } else {
+        setThreads(data.threads);
+      }
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
+      setHasMore(page < data.totalPages);
+    } catch (error) {
+      console.error('Failed to load threads:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load and board change
   useEffect(() => {
     if (boardId) {
-      api.getThreads(boardId).then(setThreads);
+      setThreads([]);
+      setCurrentPage(1);
+      setHasMore(true);
+      loadThreads(1, false);
     }
     setShowPostForm(false);
   }, [boardId]);
+
+  // PC Mode: Page change handler
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadThreads(page, false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Mobile Mode: Infinite scroll observer
+  useEffect(() => {
+    if (!isMobile || !hasMore || loading) return;
+
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          const nextPage = currentPage + 1;
+          setCurrentPage(nextPage);
+          loadThreads(nextPage, true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isMobile, hasMore, loading, currentPage]);
 
   const board = boards.find(b => b.id === boardId);
   if (!board) return <div>Board not found</div>;
@@ -129,6 +215,12 @@ const BoardView: React.FC<{
     );
   };
 
+  const filteredThreads = search.trim() ? threads.filter((thread) => {
+    const s = search.trim().toLowerCase();
+    const text = `${thread.title} ${thread.opPost.content}`.toLowerCase();
+    return text.includes(s);
+  }) : threads;
+
   return (
     <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)]">
       <div className="max-w-4xl mx-auto py-6 px-2 sm:px-4">
@@ -147,26 +239,58 @@ const BoardView: React.FC<{
                 boardId={boardId!}
                 onSubmit={async (payload: any) => {
                   const newId = await api.createThread(payload);
-                  const updatedThreads = await api.getThreads(boardId!);
-                  setThreads(updatedThreads);
-                  onThreadClick({ ...updatedThreads.find(t => t.id === newId)!, boardId: boardId! });
+                  const data = await api.getThreads(boardId!, 1);
+                  setThreads(data.threads);
+                  setTotal(data.total);
+                  setTotalPages(data.totalPages);
+                  setCurrentPage(1);
+                  const newThread = data.threads.find(t => t.id === newId);
+                  if (newThread) onThreadClick(newThread);
                 }}
                 onCancel={() => setShowPostForm(false)}
               />
             )}
           </div>
         )}
+
         <div className="space-y-4">
-          {(search.trim() ? threads.filter((thread) => {
-            const s = search.trim().toLowerCase();
-            const text = `${thread.title} ${thread.opPost.content}`.toLowerCase();
-            return text.includes(s);
-          }) : threads).map((thread) => {
+          {filteredThreads.map((thread) => {
             const bObj = boards.find(b => b.id === thread.boardId);
             const displayBoardName = isAll ? (bObj ? t(bObj.name) : thread.boardId) : t(board.name);
             return renderThreadCard(thread, displayBoardName);
           })}
         </div>
+
+        {/* PC Mode: Classic Pagination */}
+        {!isMobile && !search.trim() && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
+
+        {/* Mobile Mode: Infinite Scroll Trigger */}
+        {isMobile && !search.trim() && (
+          <div ref={loadMoreRef} className="py-4 text-center">
+            {loading && <span className="text-gray-500">{t('meta.loading')}...</span>}
+            {!loading && hasMore && (
+              <button
+                onClick={() => {
+                  const nextPage = currentPage + 1;
+                  setCurrentPage(nextPage);
+                  loadThreads(nextPage, true);
+                }}
+                className="text-[#0056b3] hover:underline"
+              >
+                {t('pagination.load_more')}
+              </button>
+            )}
+            {!hasMore && threads.length > 0 && (
+              <div className="text-gray-500">{t('pagination.no_more')}</div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -471,7 +595,7 @@ const App: React.FC = () => {
           </div>
           {/* Mobile dropdown menu */}
           <div className="md:hidden relative">
-            <button 
+            <button
               className="text-[#0056b3] text-sm font-medium p-2"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
             >
@@ -480,13 +604,13 @@ const App: React.FC = () => {
             {showMobileMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-50">
                 <div className="py-1">
-                  <button 
+                  <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                     onClick={() => setShowMobileLoginDialog(true)}
                   >
                     {t('dialog.login.button')}
                   </button>
-                  <button 
+                  <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t border-gray-200"
                     onClick={() => {
                       navigate('/');
@@ -495,7 +619,7 @@ const App: React.FC = () => {
                   >
                     {t('nav.boards')}
                   </button>
-                  <button 
+                  <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                     onClick={() => {
                       navigate('/favorites');
@@ -551,7 +675,7 @@ const App: React.FC = () => {
             <h3 className="font-bold text-lg mb-2">{t('dialog.login.title')}</h3>
             <p className="text-sm mb-4">{t('dialog.login.description')}</p>
             <div className="flex justify-end gap-2">
-              <button 
+              <button
                 className="px-4 py-2 border border-gray-300 rounded text-sm"
                 onClick={() => setShowMobileLoginDialog(false)}
               >

@@ -1,4 +1,4 @@
-import { I7chAPI, Board, Thread, Post, ThreadDetail, CreateThreadRequest, CreatePostRequest } from '../types';
+import { I7chAPI, Board, Thread, Post, ThreadDetail, CreateThreadRequest, CreatePostRequest, PaginatedThreads } from '../types';
 
 const STORAGE_KEY = '7ch_db_v1';
 const DEVICE_ID_KEY = '7ch_device_uuid';
@@ -66,7 +66,7 @@ export class MockService implements I7chAPI {
     // Create a welcome thread
     const threadId = 'welcome-thread-' + Date.now();
     const now = new Date().toISOString();
-    
+
     const opPost: Post = {
       id: 1,
       threadId,
@@ -105,23 +105,39 @@ export class MockService implements I7chAPI {
     return INITIAL_BOARDS;
   }
 
-  async getThreads(boardId: string, page: number = 1): Promise<Thread[]> {
+  async getThreads(boardId: string, page: number = 1): Promise<PaginatedThreads> {
     await this.delay();
     let threads = this.db.threads;
-    
+
     // If boardId is NOT 'all', filter by board. If 'all', return everything.
     if (boardId !== 'all') {
       threads = threads.filter(t => t.boardId === boardId);
     }
-    
-    return threads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+    const sorted = threads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+    // Pagination
+    const pageSize = 50;
+    const total = sorted.length;
+    const totalPages = Math.ceil(total / pageSize);
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const paginatedThreads = sorted.slice(start, end);
+
+    return {
+      threads: paginatedThreads,
+      total,
+      page,
+      pageSize,
+      totalPages
+    };
   }
 
   async getThreadContent(threadId: string, afterPostId?: number): Promise<ThreadDetail> {
     await this.delay();
     const thread = this.db.threads.find(t => t.id === threadId);
     if (!thread) throw new Error('Thread not found');
-    
+
     // Real View Count Logic: Increment when actually viewed
     thread.viewCount = (thread.viewCount || 0) + 1;
     this.save();
@@ -134,11 +150,11 @@ export class MockService implements I7chAPI {
     await this.delay();
     const threadId = crypto.randomUUID();
     const now = new Date().toISOString();
-    
+
     // Logic: Process Name & Tripcode
     let displayName = payload.name || 'Anonymous';
     let tripcode = undefined;
-    
+
     if (displayName.includes('#')) {
       const [namePart, passPart] = displayName.split('#');
       displayName = namePart || 'Anonymous';
@@ -187,10 +203,10 @@ export class MockService implements I7chAPI {
     // Logic: Name & Tripcode
     let displayName = payload.name || 'Anonymous';
     let tripcode = undefined;
-    
+
     if (displayName.includes('#')) {
       const [namePart, passPart] = displayName.split('#');
-      displayName = namePart || 'Anonymous'; 
+      displayName = namePart || 'Anonymous';
       if (passPart) {
         tripcode = '◆' + simpleHash(passPart);
       }
@@ -198,7 +214,7 @@ export class MockService implements I7chAPI {
 
     // Logic: Sage check
     const isSage = payload.email?.toLowerCase().includes('sage');
-    
+
     const post: Post = {
       id: newPostId,
       threadId: payload.threadId,
@@ -214,7 +230,7 @@ export class MockService implements I7chAPI {
     posts.push(post);
     thread.postCount = posts.length;
     // Removed fake random view counting
-    
+
     // Logic: Bump only if not sage
     if (!isSage) {
       thread.updatedAt = now;
