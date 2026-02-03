@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Search } from 'lucide-react';
 import { useNavigate, useParams, Route, Routes, Link } from 'react-router-dom';
 import { api } from './services/api';
 import { Board, Thread } from './types';
@@ -459,7 +460,22 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const [boards, setBoards] = useState<Board[]>([]);
   const [boardsError, setBoardsError] = useState<string | null>(null);
+
   const [search, setSearch] = useState<string>('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K or Ctrl+K or / (if not in input)
+      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName))) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Hidden Threads State (Persisted)
   const [hiddenThreads, setHiddenThreads] = useState<Set<string>>(() => {
@@ -545,13 +561,19 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center relative">
             <input
+              ref={searchInputRef}
               type="text"
               placeholder={t('board.catalog')}
-              className="bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm w-48 focus:outline-none focus:border-gray-400"
+              className="bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm w-48 focus:outline-none focus:border-gray-400 pr-8 transition-colors"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <span className="absolute right-2 text-gray-400">🔍</span>
+            <div className="absolute right-2 flex items-center gap-1 pointer-events-none">
+              <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 bg-gray-200 text-gray-500 border-gray-300">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+              <Search className="text-gray-400 w-4 h-4" />
+            </div>
           </div>
           {/* Desktop navigation - hidden on mobile */}
           <div className="hidden md:flex items-center gap-3 text-sm text-[#0056b3] font-medium">
