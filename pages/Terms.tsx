@@ -40,7 +40,7 @@ export const Terms: React.FC<TermsProps> = ({ onBack }) => {
       <div className="bg-[#37474f] text-white py-10 px-4 mb-6 shadow-sm">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{t('terms.title')}</h1>
-          <p className="opacity-90">Effective Date: January 1, 2025</p>
+          <p className="opacity-90">Effective Date: February 3, 2026</p>
         </div>
       </div>
 

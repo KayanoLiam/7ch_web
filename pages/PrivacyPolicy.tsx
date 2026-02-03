@@ -41,7 +41,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
       <div className="bg-[#455a64] text-white py-10 px-4 mb-6 shadow-sm">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{t('privacy.title')}</h1>
-          <p className="opacity-90">Last Updated: January 2025</p>
+          <p className="opacity-90">Last Updated: February 3, 2026</p>
         </div>
       </div>
 
@@ -132,7 +132,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
               {t('privacy.anonymity.desc')}
             </p>
             <code className="block bg-gray-100 p-2 rounded text-xs font-mono mt-2 mb-2">
-              Hash( Device_UUID + Current_Date + Board_ID )
+              Hash( IP + Date(UTC) + Board_ID + Secret_Salt )
             </code>
             <p>
               {t('privacy.anonymity.ensures')}
