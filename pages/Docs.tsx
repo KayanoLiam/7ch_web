@@ -117,6 +117,9 @@ export const Docs: React.FC<DocsProps> = ({ onBack }) => {
                                 </ul>
                             </div>
                         </div>
+                        <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded text-sm text-blue-900">
+                            {t('docs.overview.transparency')}
+                        </div>
                     </Section>
 
                     <Section id="architecture" title={t('docs.architecture.title')}>
@@ -127,13 +130,12 @@ export const Docs: React.FC<DocsProps> = ({ onBack }) => {
                         <p>
                             {t('docs.architecture.view-state.desc')}
                         </p>
-                        <CodeBlock label="App.tsx">
-                            {`type ViewState = 
-  | { type: 'home' }
-  | { type: 'favorites' }
-  | { type: 'board', boardId: string }
-  | { type: 'thread', threadId: string, boardId: string }
-  | { type: 'static', pageId: string };`}
+                        <CodeBlock label={t('docs.architecture.routes.label')}>
+                            {`/                       -> Home (Boards)
+/board/:boardId         -> Board
+/board/:boardId/thread/:threadId -> Thread
+/favorites              -> Favorites
+/docs | /help | /terms | /privacy | /QA -> Static Pages`}
                         </CodeBlock>
                         <p>
                             {t('docs.architecture.view-state.desc2')}
@@ -150,14 +152,17 @@ export const Docs: React.FC<DocsProps> = ({ onBack }) => {
                             <li><strong>Thread</strong>: {t('docs.data-model.entities.thread')}</li>
                             <li><strong>Post</strong>: {t('docs.data-model.entities.post')}</li>
                         </ul>
-                        <CodeBlock label="types.ts">
-                            {`interface Thread {
-  id: string;
-  boardId: string;
-  title: string;
-  viewCount: number;
-  updatedAt: string; // Used for sorting (bump system)
-  opPost: Post;
+                        <p className="text-sm text-gray-600">{t('docs.data-model.note')}</p>
+                        <CodeBlock label={t('docs.data-model.codeLabel')}>
+                            {`{
+  "id": 12,
+  "threadId": "<uuid>",
+  "name": "Anonymous",
+  "tripcode": "◆abcd1234ef",
+  "content": "...",
+  "createdAt": "2026-02-03T12:00:00Z",
+  "uid": "A1b2C3d4",
+  "isOp": false
 }`}
                         </CodeBlock>
                     </Section>
@@ -168,26 +173,30 @@ export const Docs: React.FC<DocsProps> = ({ onBack }) => {
                         <p>
                             {t('docs.features.daily-id.intro')}
                         </p>
-                        <CodeBlock label="services/mockService.ts">
-                            {`// Hash(UUID + Date + BoardID)
-const generateDailyId = (boardId: string): string => {
-  const dateStr = new Date().toISOString().split('T')[0];
-  const deviceId = getDeviceId();
-  return simpleHash(\`\${deviceId}-\${dateStr}-\${boardId}\`)
-    .substring(0, 9);
-};`}
+                        <ul className="list-disc list-inside pl-2 space-y-1">
+                            <li>{t('docs.features.daily-id.points.input')}</li>
+                            <li>{t('docs.features.daily-id.points.hash')}</li>
+                            <li>{t('docs.features.daily-id.points.output')}</li>
+                        </ul>
+                        <p>
+                            {t('docs.features.daily-id.behavior')}
+                        </p>
+                        <CodeBlock label={t('docs.features.daily-id.codeLabel')}>
+                            {`Raw = IP + Date(UTC: YYYY-MM-DD) + BoardId + SecretSalt
+Hash = SHA256(Raw)
+Encoded = Base64UrlSafeNoPad(Hash)
+DailyId = Encoded.substring(0, 8)`}
                         </CodeBlock>
+                        <p className="text-sm text-gray-600">{t('docs.features.daily-id.note')}</p>
 
                         <h4 className="font-bold text-gray-800 mt-6 text-lg">{t('docs.features.tripcode.title')}</h4>
                         <p>
                             {t('docs.features.tripcode.intro')}
                         </p>
                         <CodeBlock>
-                            {`if (displayName.includes('#')) {
-  const [namePart, passPart] = displayName.split('#');
-  displayName = namePart;
-  tripcode = '◆' + simpleHash(passPart);
-}`}
+                            {`Input: "Name#password"
+Name = "Name"
+Tripcode = "◆" + hex(SHA256(password + SecretSalt)).slice(0, 10)`}
                         </CodeBlock>
 
                         <h4 className="font-bold text-gray-800 mt-6 text-lg">{t('docs.features.sage.title')}</h4>
@@ -195,15 +204,20 @@ const generateDailyId = (boardId: string): string => {
                             {t('docs.features.sage.intro')}
                         </p>
                         <CodeBlock>
-                            {`const isSage = payload.email?.toLowerCase().includes('sage');
+                            {`const isSage = email?.toLowerCase().includes('sage');
 if (!isSage) {
-  thread.updatedAt = now; // Only update time (bump) if NOT sage
+  thread.updatedAt = now; // bump only when NOT sage
 }`}
                         </CodeBlock>
 
                         <h4 className="font-bold text-gray-800 mt-6 text-lg">{t('docs.features.anchor.title')}</h4>
                         <p>
                             {t('docs.features.anchor.intro')}
+                        </p>
+
+                        <h4 className="font-bold text-gray-800 mt-6 text-lg">{t('docs.features.moderation.title')}</h4>
+                        <p>
+                            {t('docs.features.moderation.intro')}
                         </p>
                     </Section>
 
@@ -218,7 +232,7 @@ if (!isSage) {
                             <li><strong>{t('docs.i18n.era')}</strong></li>
                             <li><strong>{t('docs.i18n.weekday')}</strong></li>
                         </ul>
-                        <CodeBlock label="Era Conversion Logic">
+                        <CodeBlock label={t('docs.i18n.codeLabel')}>
                             {`if (d.getFullYear() >= 2019) y = 'R' + (d.getFullYear() - 2018); // Reiwa
 else if (d.getFullYear() >= 1989) y = 'H' + (d.getFullYear() - 1988); // Heisei`}
                         </CodeBlock>
