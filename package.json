@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run update-changelog && vite build",
     "preview": "vite preview",
     "update-changelog": "node scripts/update-changelog.cjs"
   },
