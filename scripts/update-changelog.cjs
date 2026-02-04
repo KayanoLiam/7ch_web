@@ -1,0 +1,103 @@
+const { execSync } = require('child_process');
+const { writeFileSync, existsSync } = require('fs');
+const { join, resolve } = require('path');
+
+// Configuration
+const FRONTEND_DIR = process.cwd();
+const BACKEND_DIR = resolve(process.cwd(), '../backend_7ch');
+const OUTPUT_FILE = join(process.cwd(), 'data/changelog.ts');
+
+console.log('🔄 Generating changelog...');
+console.log(`📂 Frontend: ${FRONTEND_DIR}`);
+console.log(`📂 Backend:  ${existsSync(BACKEND_DIR) ? BACKEND_DIR : 'Not Found (Skipping)'}`);
+
+function getGitLog(cwd, label) {
+    if (!existsSync(cwd)) return [];
+    try {
+        // Get last 50 commits
+        // Format: hash|date|message
+        const cmd = 'git log -n 50 --pretty=format:"%h|%ad|%s" --date=short';
+        const output = execSync(cmd, { cwd, encoding: 'utf-8' });
+
+        return output.split('\n')
+            .filter(line => line.trim())
+            .map(line => {
+                const [hash, date, msg] = line.split('|');
+                return {
+                    hash,
+                    date, // YYYY-MM-DD
+                    msg: `[${label}] ${msg}`,
+                    rawDate: new Date(date)
+                };
+            });
+    } catch (e) {
+        console.warn(`⚠️  Failed to read git log from ${cwd}: ${e.message}`);
+        return [];
+    }
+}
+
+// 1. Fetch Commits
+const frontendCommits = getGitLog(FRONTEND_DIR, 'Frontend');
+const backendCommits = getGitLog(BACKEND_DIR, 'Backend');
+const allCommits = [...frontendCommits, ...backendCommits];
+
+// 2. Filter & Sort
+// Filter out merge commits and trivial updates if needed, or keeping everything simple
+const filteredCommits = allCommits.filter(c =>
+    !c.msg.includes('Merge pull request') &&
+    !c.msg.includes('Merge branch')
+);
+
+// Sort by date desc
+filteredCommits.sort((a, b) => b.rawDate - a.rawDate);
+
+// 3. Group by Date
+const groupedOptions = {}; // { '2026-02-04': [commits] }
+
+filteredCommits.forEach(c => {
+    const dateKey = c.date; // already YYYY-MM-DD
+    if (!groupedOptions[dateKey]) {
+        groupedOptions[dateKey] = [];
+    }
+    // Deduplicate messages per day
+    if (!groupedOptions[dateKey].some(existing => existing.msg === c.msg)) {
+        groupedOptions[dateKey].push(c);
+    }
+});
+
+// 4. Format for TypeScript
+// Transform map to array
+const entries = Object.keys(groupedOptions)
+    .sort((a, b) => new Date(b) - new Date(a)) // Sort days desc
+    .map((date, index) => {
+        // Generate a version number or title
+        // Latest date gets a "Latest" tag, or just use Date
+        const title = `Update ${date}`;
+        // Mock version number relative to date for fun, or just placeholders
+        const version = `build-${date.replace(/-/g, '')}`;
+
+        // Format date to "Feb 4, 2026" style
+        const dateObj = new Date(date);
+        const dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+        return {
+            date: dateStr,
+            title: title,
+            version: version,
+            changes: groupedOptions[date].map(c => c.msg)
+        };
+    });
+
+// 5. Write File
+const fileContent = `export interface ChangelogEntry {
+  date: string;
+  title: string;
+  version: string;
+  changes: string[];
+}
+
+export const changelogData: ChangelogEntry[] = ${JSON.stringify(entries, null, 2)};
+`;
+
+writeFileSync(OUTPUT_FILE, fileContent);
+console.log(`✅ Changelog updated at ${OUTPUT_FILE}`);

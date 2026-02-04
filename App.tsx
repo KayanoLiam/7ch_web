@@ -26,6 +26,7 @@ import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { Terms } from './pages/Terms';
 import { Help } from './pages/Help';
 import { QA } from './pages/QA';
+import { Changelog } from './pages/Changelog';
 
 // --- Board View Component ---
 const BoardView: React.FC<{
@@ -681,6 +682,7 @@ const App: React.FC = () => {
         <Link to="/terms"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.terms')}</button></Link>
         <Link to="/help"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.help')}</button></Link>
         <Link to="/QA"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.QA')}</button></Link>
+        <Link to="/changelog"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">Changelog</button></Link>
         <button className="text-gray-500 hover:underline hover:text-[#0056b3]" onClick={() => setShowDonateModal(true)}>{t('footer.donate')}</button>
       </div>
       <div>&copy; 2024 7ch Project. All rights reserved.</div>
@@ -786,6 +788,7 @@ const App: React.FC = () => {
           <Route path="/terms" element={<Terms onBack={() => navigate('/')} />} />
           <Route path="/help" element={<Help onBack={() => navigate('/')} />} />
           <Route path="/QA" element={<QA onBack={() => navigate('/')} />} />
+          <Route path="/changelog" element={<Changelog onBack={() => navigate('/')} />} />
         </Routes>
       </main>
       {renderFooter()}
