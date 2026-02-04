@@ -11,6 +11,7 @@ export const changelogData: ChangelogEntry[] = [
     "title": "Update 2026-02-04",
     "version": "build-20260204",
     "changes": [
+      "[Frontend] Add changelog feature with page, data, and update script",
       "[Backend] Fix DB URL fallback for Render",
       "[Backend] refactor: reorganize code structure and add backup tool"
     ]
