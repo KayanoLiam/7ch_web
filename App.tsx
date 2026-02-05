@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
-import { useNavigate, useParams, Route, Routes, Link } from 'react-router-dom';
-import { api } from './services/api';
+import { useNavigate, useParams, Route, Routes, Link, useLocation } from 'react-router-dom';
+import { api, apiBaseUrl, useMock as isMockMode } from './services/api';
 import { Board, Thread } from './types';
 import { PostForm } from './components/PostForm';
 import { ThreadView } from './components/ThreadDetail';
@@ -38,7 +38,8 @@ const BoardView: React.FC<{
   onToggleFollow: (e: React.MouseEvent, id: string) => void;
   hiddenThreads: Set<string>;
   followedThreads: Set<string>;
-}> = ({ boards, search, onCreateThread, onThreadClick, onToggleHide, onToggleFollow, hiddenThreads, followedThreads }) => {
+  refreshToken: number;
+}> = ({ boards, search, onCreateThread, onThreadClick, onToggleHide, onToggleFollow, hiddenThreads, followedThreads, refreshToken }) => {
   const { t, i18n } = useTranslation();
   const { boardId } = useParams();
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -100,6 +101,14 @@ const BoardView: React.FC<{
     }
     setShowPostForm(false);
   }, [boardId]);
+
+  useEffect(() => {
+    if (!boardId || refreshToken === 0) return;
+    setThreads([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    loadThreads(1, false);
+  }, [refreshToken, boardId]);
 
   // PC Mode: Page change handler
   const handlePageChange = (page: number) => {
@@ -437,7 +446,9 @@ const FavoritesView: React.FC<{
 const ThreadViewWrapper: React.FC<{
   followedThreads: Set<string>;
   onToggleFollow: (e: any, id: string) => void;
-}> = ({ followedThreads, onToggleFollow }) => {
+  refreshToken: number;
+  enablePolling: boolean;
+}> = ({ followedThreads, onToggleFollow, refreshToken, enablePolling }) => {
   const { boardId, threadId } = useParams();
   const navigate = useNavigate();
 
@@ -450,6 +461,8 @@ const ThreadViewWrapper: React.FC<{
         onBack={() => navigate(`/board/${boardId}`)}
         isFollowed={followedThreads.has(threadId)}
         onToggleFollow={(e) => onToggleFollow(e, threadId)}
+        refreshToken={refreshToken}
+        enablePolling={enablePolling}
       />
     </div>
   );
@@ -459,11 +472,34 @@ const ThreadViewWrapper: React.FC<{
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [boards, setBoards] = useState<Board[]>([]);
   const [boardsError, setBoardsError] = useState<string | null>(null);
 
+  const [boardRefreshToken, setBoardRefreshToken] = useState(0);
+  const [threadRefreshToken, setThreadRefreshToken] = useState(0);
+  const [showBoardUpdateNotice, setShowBoardUpdateNotice] = useState(false);
+  const [showThreadUpdateNotice, setShowThreadUpdateNotice] = useState(false);
+  const [showVersionUpdateNotice, setShowVersionUpdateNotice] = useState(false);
+  const [latestServerVersion, setLatestServerVersion] = useState<string | null>(null);
+  const [sseConnected, setSseConnected] = useState(false);
+
   const [search, setSearch] = useState<string>('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const threadMatch = location.pathname.match(/^\/board\/([^/]+)\/thread\/([^/]+)\/?$/);
+  const boardMatch = location.pathname.match(/^\/board\/([^/]+)\/?$/);
+  const currentBoardId = threadMatch?.[1] ?? boardMatch?.[1] ?? null;
+  const currentThreadId = threadMatch?.[2] ?? null;
+  const isThreadPage = Boolean(threadMatch);
+  const isBoardPage = Boolean(boardMatch) && !isThreadPage;
+
+  const routeRef = useRef({
+    currentBoardId: null as string | null,
+    currentThreadId: null as string | null,
+    isThreadPage: false,
+    isBoardPage: false,
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -476,6 +512,97 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    routeRef.current = {
+      currentBoardId,
+      currentThreadId,
+      isThreadPage,
+      isBoardPage,
+    };
+  }, [currentBoardId, currentThreadId, isThreadPage, isBoardPage]);
+
+  useEffect(() => {
+    setShowBoardUpdateNotice(false);
+    setShowThreadUpdateNotice(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isMockMode) return;
+
+    const es = new EventSource(`${apiBaseUrl}/api/events`);
+    const parseData = (e: MessageEvent) => {
+      if (!e.data) return null;
+      try {
+        return JSON.parse(e.data);
+      } catch {
+        return null;
+      }
+    };
+
+    const handleServerVersion = (e: MessageEvent) => {
+      const payload = parseData(e);
+      const version = payload?.version ?? e.data;
+      if (!version) return;
+
+      const stored = localStorage.getItem('7ch_server_version');
+      if (!stored) {
+        localStorage.setItem('7ch_server_version', version);
+        return;
+      }
+      if (stored !== version) {
+        setLatestServerVersion(version);
+        setShowVersionUpdateNotice(true);
+      }
+    };
+
+    const handleThreadCreated = (e: MessageEvent) => {
+      const payload = parseData(e);
+      if (!payload) return;
+      const { boardId } = payload as { boardId?: string };
+      const { currentBoardId, isBoardPage } = routeRef.current;
+      if (!isBoardPage || !currentBoardId || !boardId) return;
+      if (currentBoardId === 'all' || currentBoardId === boardId) {
+        setShowBoardUpdateNotice(true);
+      }
+    };
+
+    const handlePostCreated = (e: MessageEvent) => {
+      const payload = parseData(e);
+      if (!payload) return;
+      const { threadId, boardId } = payload as { threadId?: string; boardId?: string };
+      const { currentThreadId, currentBoardId, isThreadPage, isBoardPage } = routeRef.current;
+      if (isThreadPage && currentThreadId && threadId === currentThreadId) {
+        setShowThreadUpdateNotice(true);
+        return;
+      }
+      if (!isBoardPage || !currentBoardId || !boardId) return;
+      if (currentBoardId === 'all' || currentBoardId === boardId) {
+        setShowBoardUpdateNotice(true);
+      }
+    };
+
+    const handleResync = () => {
+      const { isThreadPage, isBoardPage } = routeRef.current;
+      if (isThreadPage) setShowThreadUpdateNotice(true);
+      if (isBoardPage) setShowBoardUpdateNotice(true);
+    };
+
+    es.addEventListener('server_version', handleServerVersion as EventListener);
+    es.addEventListener('thread_created', handleThreadCreated as EventListener);
+    es.addEventListener('post_created', handlePostCreated as EventListener);
+    es.addEventListener('resync', handleResync as EventListener);
+    es.onopen = () => setSseConnected(true);
+    es.onerror = () => setSseConnected(false);
+
+    return () => {
+      es.removeEventListener('server_version', handleServerVersion as EventListener);
+      es.removeEventListener('thread_created', handleThreadCreated as EventListener);
+      es.removeEventListener('post_created', handlePostCreated as EventListener);
+      es.removeEventListener('resync', handleResync as EventListener);
+      es.close();
+    };
   }, []);
 
   // Hidden Threads State (Persisted)
@@ -545,6 +672,30 @@ const App: React.FC = () => {
       localStorage.setItem('7ch_followed_threads', JSON.stringify(Array.from(next)));
       return next;
     });
+  };
+
+  const handleBoardRefresh = () => {
+    setShowBoardUpdateNotice(false);
+    setBoardRefreshToken(t => t + 1);
+  };
+
+  const handleThreadRefresh = () => {
+    setShowThreadUpdateNotice(false);
+    setThreadRefreshToken(t => t + 1);
+  };
+
+  const handleVersionRefresh = () => {
+    if (latestServerVersion) {
+      localStorage.setItem('7ch_server_version', latestServerVersion);
+    }
+    window.location.reload();
+  };
+
+  const handleVersionDismiss = () => {
+    if (latestServerVersion) {
+      localStorage.setItem('7ch_server_version', latestServerVersion);
+    }
+    setShowVersionUpdateNotice(false);
   };
 
   const handleThreadClick = (thread: Thread) => {
@@ -674,6 +825,74 @@ const App: React.FC = () => {
     </header>
   );
 
+  const renderLiveNotices = () => (
+    <>
+      {showVersionUpdateNotice && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-900">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center gap-3 text-sm">
+            <span className="font-bold">{t('realtime.new_version')}</span>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={handleVersionRefresh}
+                className="px-3 py-1 rounded border border-amber-300 text-amber-900 bg-amber-100 hover:bg-amber-200 transition-colors"
+              >
+                {t('realtime.refresh_page')}
+              </button>
+              <button
+                onClick={handleVersionDismiss}
+                className="px-3 py-1 rounded border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors"
+              >
+                {t('realtime.dismiss')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showThreadUpdateNotice && (
+        <div className="bg-sky-50 border-b border-sky-200 text-sky-900">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center gap-3 text-sm">
+            <span className="font-bold">{t('realtime.new_replies')}</span>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={handleThreadRefresh}
+                className="px-3 py-1 rounded border border-sky-300 text-sky-900 bg-sky-100 hover:bg-sky-200 transition-colors"
+              >
+                {t('realtime.load_replies')}
+              </button>
+              <button
+                onClick={() => setShowThreadUpdateNotice(false)}
+                className="px-3 py-1 rounded border border-sky-200 text-sky-700 hover:bg-sky-100 transition-colors"
+              >
+                {t('realtime.dismiss')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showBoardUpdateNotice && (
+        <div className="bg-blue-50 border-b border-blue-200 text-blue-900">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center gap-3 text-sm">
+            <span className="font-bold">{t('realtime.new_content')}</span>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={handleBoardRefresh}
+                className="px-3 py-1 rounded border border-blue-300 text-blue-900 bg-blue-100 hover:bg-blue-200 transition-colors"
+              >
+                {t('realtime.refresh_list')}
+              </button>
+              <button
+                onClick={() => setShowBoardUpdateNotice(false)}
+                className="px-3 py-1 rounded border border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors"
+              >
+                {t('realtime.dismiss')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   const renderFooter = () => (
     <footer className="mt-auto py-8 text-center text-sm text-gray-500 border-t border-gray-200 bg-white">
       <div className="flex justify-center flex-wrap gap-4 sm:gap-6 mb-4">
@@ -692,6 +911,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen font-sans bg-[#ffffff] text-[#333] flex flex-col">
       {renderHeader()}
+      {renderLiveNotices()}
       {/* Mobile Login Dialog - rendered outside main content to ensure proper layering */}
       {showMobileLoginDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:hidden">
@@ -759,6 +979,7 @@ const App: React.FC = () => {
               onToggleFollow={toggleFollow}
               hiddenThreads={hiddenThreads}
               followedThreads={followedThreads}
+              refreshToken={boardRefreshToken}
             />
           } />
 
@@ -767,6 +988,8 @@ const App: React.FC = () => {
             <ThreadViewWrapper
               followedThreads={followedThreads}
               onToggleFollow={toggleFollow}
+              refreshToken={threadRefreshToken}
+              enablePolling={!sseConnected}
             />
           } />
 

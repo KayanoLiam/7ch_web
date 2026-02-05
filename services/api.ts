@@ -56,7 +56,7 @@ const envBase = (import.meta.env.VITE_API_BASE_URL as string | undefined);
 const defaultBase = "http://localhost:8080";
 const isVercel = typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app");
 const vercelFallbackBase = "https://backend-7ch.onrender.com";
-const apiBaseUrl = (envBase && envBase.trim().length > 0 ? envBase : (isVercel ? vercelFallbackBase : defaultBase));
-const useMock = ((import.meta.env.VITE_USE_MOCK as string | undefined) ?? "false") === "true";
+export const apiBaseUrl = (envBase && envBase.trim().length > 0 ? envBase : (isVercel ? vercelFallbackBase : defaultBase));
+export const useMock = ((import.meta.env.VITE_USE_MOCK as string | undefined) ?? "false") === "true";
 
 export const api: I7chAPI = useMock ? mockApi : new RealService(apiBaseUrl);

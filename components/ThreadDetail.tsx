@@ -115,9 +115,11 @@ interface ThreadViewProps {
   onBack: () => void;
   isFollowed: boolean;
   onToggleFollow: (e: any) => void;
+  refreshToken: number;
+  enablePolling: boolean;
 }
 
-export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFollowed, onToggleFollow }) => {
+export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFollowed, onToggleFollow, refreshToken, enablePolling }) => {
   const { t } = useTranslation();
   const [data, setData] = useState<ThreadDetail | null>(null);
   const [formKey, setFormKey] = useState(0);
@@ -134,9 +136,15 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
 
   useEffect(() => {
     loadData();
+    if (!enablePolling) return;
     const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
-  }, [threadId]);
+  }, [threadId, enablePolling]);
+
+  useEffect(() => {
+    if (refreshToken === 0) return;
+    loadData();
+  }, [refreshToken]);
 
   const handleReplySubmit = async (payload: any) => {
     await api.createPost(payload);
