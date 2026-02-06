@@ -1,3 +1,5 @@
+// 数据契约：与后端 API 字段保持 camelCase 一致。
+// Data contracts: keep camelCase aligned with backend responses.
 export interface Board {
   id: string;
   name: string;
@@ -5,14 +7,14 @@ export interface Board {
 }
 
 export interface Post {
-  id: number; // Floor number (1, 2, 3...)
+  id: number; // 楼层号（1,2,3...）/ Floor number (1,2,3...)
   threadId: string;
-  name: string; // Display name (processed)
-  tripcode?: string; // Optional tripcode display
+  name: string; // 显示名（处理后）/ Display name (processed)
+  tripcode?: string; // 绊码显示 / Optional tripcode display
   content: string;
-  createdAt: string; // ISO String
-  uid: string; // Daily ID based on IP/Device
-  isOp: boolean; // Is this the thread starter?
+  createdAt: string; // ISO 时间串 / ISO timestamp
+  uid: string; // 每日 ID / Daily ID
+  isOp: boolean; // 是否楼主 / Is this the thread starter?
 }
 
 export interface Thread {
@@ -20,22 +22,22 @@ export interface Thread {
   boardId: string;
   title: string;
   postCount: number;
-  viewCount: number; // New visual field
-  updatedAt: string; // For sorting (bump)
+  viewCount: number; // 浏览量 / View count
+  updatedAt: string; // 排序依据（被顶时间）/ For sorting (bump)
   createdAt: string;
-  opPost: Post; // Preview of the first post
+  opPost: Post; // OP 预览 / Preview of the first post
 }  
 
 export interface ThreadDetail extends Thread {
   posts: Post[];
 }
 
-// Request Payloads
+// 请求体模型 / Request payloads
 export interface CreateThreadRequest {
   boardId: string;
   title: string;
   name?: string;
-  email?: string; // For sage
+  email?: string; // sage 判定 / For sage
   content: string;
 }
 
@@ -46,7 +48,7 @@ export interface CreatePostRequest {
   content: string;
 }
 
-// Pagination Response
+// 分页返回结构 / Pagination response
 export interface PaginatedThreads {
   threads: Thread[];
   total: number;
@@ -55,7 +57,7 @@ export interface PaginatedThreads {
   totalPages: number;
 }
 
-// The Contract
+// API 契约 / API contract
 export interface I7chAPI {
   getBoards(): Promise<Board[]>;
   getThreads(boardId: string, page?: number): Promise<PaginatedThreads>;

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
+// 分页组件：简化的大页数折叠显示。
+// Pagination component: condensed display for large page counts.
 interface PaginationProps {
     currentPage: number;
     totalPages: number;
@@ -16,11 +18,15 @@ export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages,
         const pages: (number | string)[] = [];
         const maxVisible = 7;
 
+        // 在可见数量内直接展示全部页码。
+        // If total pages are small, show all page numbers.
         if (totalPages <= maxVisible) {
             for (let i = 1; i <= totalPages; i++) {
                 pages.push(i);
             }
         } else {
+            // 使用“首尾 + 当前附近 + 省略号”的折叠策略。
+            // Use "edges + neighbors + ellipsis" collapsing strategy.
             // Display: 1 ... 4 5 [6] 7 8 ... 20
             if (currentPage <= 4) {
                 pages.push(1, 2, 3, 4, 5, '...', totalPages);

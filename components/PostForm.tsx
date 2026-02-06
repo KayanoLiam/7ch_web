@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CreatePostRequest, CreateThreadRequest } from '../types';
 
+// 发帖/回帖表单：同一组件兼顾新线程与回复。
+// Post/reply form: single component handles thread creation and replies.
 interface PostFormProps {
   boardId?: string; // If present, creating thread
   threadId?: string; // If present, replying
@@ -17,6 +19,8 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
   const [email, setEmail] = useState('');
   const [content, setContent] = useState('');
 
+  // 当传入 boardId 时，表示创建新线程；否则是回复。
+  // If boardId exists, we are creating a thread; otherwise replying.
   const isNewThread = !!boardId;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +29,9 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
       alert(t('error.required'));
       return;
     }
-    
+
+    // 组装请求体：根据模式选择线程/回复结构。
+    // Build payload: choose thread or reply shape based on mode.
     setIsSubmitting(true);
     try {
       if (isNewThread) {
@@ -45,7 +51,9 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
           content: content.trim()
         };
         await onSubmit(payload);
-        setContent(''); // Clear content on reply success
+        // 回复成功后清空正文，方便继续回复。
+        // Clear content after successful reply for quick follow-ups.
+        setContent('');
       }
     } catch (err) {
       console.error(err);

@@ -4,7 +4,12 @@ import { api } from '../services/api';
 import { ThreadDetail, Post } from '../types';
 import { PostForm } from './PostForm';
 
+// 线程详情：展示 OP + 全部回复、引用预览、以及回复表单。
+// Thread detail: renders OP + replies, quote previews, and reply form.
+
 // --- Rich Text Component (Anchor Logic) ---
+// 引用/链接解析：识别 >>123 与 URL，并提供悬停预览。
+// Quote/URL parsing: detect >>123 and URLs, plus hover previews.
 interface RichTextProps {
   content: string;
   allPosts: Post[];
@@ -12,6 +17,8 @@ interface RichTextProps {
 }
 
 const RichText: React.FC<RichTextProps> = ({ content, allPosts, onQuoteClick }) => {
+  // 将正文按“引用/链接”拆分为片段，便于逐段渲染。
+  // Split content by quote or URL tokens for piecewise rendering.
   const parts = content.split(/(>>\d+|https?:\/\/[^\s]+)/g);
   const [hoveredPost, setHoveredPost] = useState<Post | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -20,6 +27,8 @@ const RichText: React.FC<RichTextProps> = ({ content, allPosts, onQuoteClick }) 
     const post = allPosts.find(p => p.id === targetId);
     if (post) {
       setHoveredPost(post);
+      // 基于目标元素计算 tooltip 的屏幕位置。
+      // Compute tooltip position based on target element.
       const rect = (e.target as HTMLElement).getBoundingClientRect();
       setTooltipPos({ x: rect.left, y: rect.bottom + 5 });
     }
@@ -70,6 +79,8 @@ const SinglePost: React.FC<{ post: Post, allPosts: Post[], onReply: (id: number)
   const { t, i18n } = useTranslation();
   const d = new Date(post.createdAt);
 
+  // 根据语言格式化时间（中/日两种风格）。
+  // Format timestamp based on locale (CN/JP styles).
   let dateStr;
   const isJa = i18n.language === 'ja-JP';
 
@@ -137,6 +148,8 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
   useEffect(() => {
     loadData();
     if (!enablePolling) return;
+    // 轮询用于非 SSE 场景，避免线程内容过旧。
+    // Polling is a fallback when SSE is not enabled.
     const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, [threadId, enablePolling]);
@@ -147,6 +160,8 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
   }, [refreshToken]);
 
   const handleReplySubmit = async (payload: any) => {
+    // 回复成功后刷新内容，并触发滚动到底部。
+    // After reply, refresh content and scroll to bottom.
     await api.createPost(payload);
     await loadData();
     setFormKey(k => k + 1);
@@ -154,6 +169,8 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
   };
 
   const insertQuote = (id: number) => {
+    // 点击引用：自动打开表单并插入 >>id。
+    // On quote click: open form and insert >>id.
     setShowReplyForm(true);
     setTimeout(() => {
       const textarea = document.querySelector('textarea');

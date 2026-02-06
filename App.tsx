@@ -28,7 +28,12 @@ import { Help } from './pages/Help';
 import { QA } from './pages/QA';
 import { Changelog } from './pages/Changelog';
 
+// 应用入口：路由、全局状态、SSE 通知、以及主要布局。
+// App entry: routing, global state, SSE notices, and overall layout.
+
 // --- Board View Component ---
+// 看板列表页：负责分页、搜索过滤、移动端无限滚动。
+// Board view: handles pagination, search filtering, and mobile infinite scroll.
 const BoardView: React.FC<{
   boards: Board[];
   search: string;
@@ -45,21 +50,25 @@ const BoardView: React.FC<{
   const [threads, setThreads] = useState<Thread[]>([]);
   const [showPostForm, setShowPostForm] = useState(false);
 
-  // Pagination states
+  // 分页状态（PC 模式使用分页，移动端使用无限滚动）。
+  // Pagination state (desktop paging, mobile infinite scroll).
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  // Device detection
+  // 设备判定：宽度 < 768 视为移动端。
+  // Device detection: width < 768 treated as mobile.
   const [isMobile, setIsMobile] = useState(false);
 
-  // Infinite scroll ref
+  // 无限滚动所需的 observer 与触发元素。
+  // IntersectionObserver + sentinel for infinite scroll.
   const loadMoreRef = React.useRef<HTMLDivElement>(null);
   const observerRef = React.useRef<IntersectionObserver | null>(null);
 
-  // Detect mobile on mount and resize
+  // 初始化/窗口变化时检测设备。
+  // Detect device on mount and resize.
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -69,7 +78,8 @@ const BoardView: React.FC<{
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Load threads function
+  // 拉取线程列表：支持覆盖或追加。
+  // Fetch threads: replace or append.
   const loadThreads = async (page: number, append: boolean = false) => {
     if (loading || !boardId) return;
     setLoading(true);
@@ -91,7 +101,8 @@ const BoardView: React.FC<{
     }
   };
 
-  // Initial load and board change
+  // 首次进入或板块切换时重新加载。
+  // Reload on first mount or board switch.
   useEffect(() => {
     if (boardId) {
       setThreads([]);
@@ -110,14 +121,16 @@ const BoardView: React.FC<{
     loadThreads(1, false);
   }, [refreshToken, boardId]);
 
-  // PC Mode: Page change handler
+  // PC 模式分页切换。
+  // Desktop pagination handler.
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     loadThreads(page, false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Mobile Mode: Infinite scroll observer
+  // 移动端：观察触底并追加下一页。
+  // Mobile: observe sentinel and append next page.
   useEffect(() => {
     if (!isMobile || !hasMore || loading) return;
 
@@ -226,6 +239,8 @@ const BoardView: React.FC<{
     );
   };
 
+  // 仅在有搜索词时进行前端过滤（标题 + OP 内容）。
+  // Client-side filter when search term exists (title + OP content).
   const filteredThreads = search.trim() ? threads.filter((thread) => {
     const s = search.trim().toLowerCase();
     const text = `${thread.title} ${thread.opPost.content}`.toLowerCase();
@@ -308,6 +323,8 @@ const BoardView: React.FC<{
 };
 
 // --- Favorites View Component ---
+// 收藏页：通过线程详情接口回填最新内容。
+// Favorites view: hydrates latest data via thread detail API.
 const FavoritesView: React.FC<{
   followedThreads: Set<string>;
   boards: Board[];
@@ -443,6 +460,8 @@ const FavoritesView: React.FC<{
 };
 
 // --- Thread View Wrapper Component ---
+// 路由包装层：读取 URL 参数并注入 ThreadView。
+// Route wrapper: reads URL params and injects ThreadView props.
 const ThreadViewWrapper: React.FC<{
   followedThreads: Set<string>;
   onToggleFollow: (e: any, id: string) => void;
@@ -469,6 +488,8 @@ const ThreadViewWrapper: React.FC<{
 };
 
 // --- Main App Component ---
+// 全局状态 + SSE 推送 + 页面导航。
+// Global state + SSE updates + navigation.
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -531,6 +552,8 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isMockMode) return;
 
+    // SSE：订阅服务端事件，用于新帖、新回复与版本更新提示。
+    // SSE: subscribe to server events for new content and version notices.
     const es = new EventSource(`${apiBaseUrl}/api/events`);
     const parseData = (e: MessageEvent) => {
       if (!e.data) return null;
@@ -605,7 +628,8 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Hidden Threads State (Persisted)
+  // 隐藏线程（持久化到 LocalStorage）。
+  // Hidden threads (persisted in LocalStorage).
   const [hiddenThreads, setHiddenThreads] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem('7ch_hidden_threads');
@@ -615,7 +639,8 @@ const App: React.FC = () => {
     }
   });
 
-  // Followed Threads State (Persisted)
+  // 关注线程（持久化到 LocalStorage）。
+  // Followed threads (persisted in LocalStorage).
   const [followedThreads, setFollowedThreads] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem('7ch_followed_threads');
@@ -625,11 +650,10 @@ const App: React.FC = () => {
     }
   });
 
-  // Donate Modal State
+  // 弹窗与移动端 UI 状态。
+  // Modal and mobile UI state.
   const [showDonateModal, setShowDonateModal] = useState(false);
-  // Mobile Menu State
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  // Mobile Login Dialog State
   const [showMobileLoginDialog, setShowMobileLoginDialog] = useState(false);
 
   useEffect(() => {
@@ -648,6 +672,8 @@ const App: React.FC = () => {
   }, []);
 
   const changeLang = (lng: string) => {
+    // 语言切换：同时落地 localStorage，保持刷新后语言一致。
+    // Language switch: persist to localStorage for reload consistency.
     i18n.changeLanguage(lng);
     localStorage.setItem('7ch_lang', lng);
   };
@@ -685,6 +711,8 @@ const App: React.FC = () => {
   };
 
   const handleVersionRefresh = () => {
+    // 记录最新版本并强制刷新页面。
+    // Store latest version then hard reload.
     if (latestServerVersion) {
       localStorage.setItem('7ch_server_version', latestServerVersion);
     }
@@ -703,6 +731,8 @@ const App: React.FC = () => {
   };
 
   // --- Render Functions ---
+  // 视图拆分为函数，便于阅读与复用。
+  // Split rendering into functions for clarity.
 
   const renderHeader = () => (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">

@@ -1,6 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+// 国际化资源集中维护：保持 key 稳定，避免破坏已有翻译。
+// Centralized i18n resources: keep keys stable to avoid breaking translations.
 const resources = {
       'zh-CN': {
             translation: {
@@ -692,7 +694,9 @@ i18n
       .use(initReactI18next)
       .init({
             resources,
-            lng: typeof window !== 'undefined' ? (localStorage.getItem('7ch_lang') || 'zh-CN') : 'zh-CN', // 修复 SSR 可能的报错
+            // 语言选择优先 localStorage，其次默认中文；SSR 场景安全回退。
+            // Language priority: localStorage > default zh-CN; SSR-safe fallback.
+            lng: typeof window !== 'undefined' ? (localStorage.getItem('7ch_lang') || 'zh-CN') : 'zh-CN',
             fallbackLng: 'zh-CN',
             interpolation: {
                   escapeValue: false
