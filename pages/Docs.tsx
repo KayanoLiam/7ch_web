@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// 技术文档页：侧边目录 + 内容分区，支持平滑滚动定位。
+// Docs page: table of contents + sections with smooth scroll navigation.
+
 interface DocsProps {
     onBack: () => void;
 }
 
+// 内容分区：统一标题样式与锚点偏移。
+// Section block: consistent headings with anchor offset.
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
     <section id={id} className="mb-12 scroll-mt-20">
         <h3 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
@@ -16,6 +21,8 @@ const Section: React.FC<{ id: string; title: string; children: React.ReactNode }
     </section>
 );
 
+// 代码块：可选标签 + 滚动容器，便于展示命令/示例。
+// Code block: optional label with scrollable container for examples.
 const CodeBlock: React.FC<{ children: React.ReactNode; label?: string }> = ({ children, label }) => (
     <div className="my-4 rounded border border-gray-200 bg-gray-50 overflow-hidden">
         {label && <div className="bg-gray-100 px-3 py-1 text-xs font-bold text-gray-500 border-b border-gray-200">{label}</div>}

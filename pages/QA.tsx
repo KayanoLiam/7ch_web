@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// 常见问题页：按主题分组的 Q&A，支持目录导航。
+// FAQ page: topic-based Q&A with table of contents navigation.
+
 interface QAProps {
   onBack: () => void;
 }
 
+// 章节容器：提供锚点与统一排版。
+// Section container: provides anchor and unified layout.
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
   <section id={id} className="mb-10 scroll-mt-20">
     <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">

@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+// Tailwind 配置：扫描范围、主题扩展、动画与字体。
+// Tailwind config: content scan, theme extensions, animations, and fonts.
 module.exports = {
   darkMode: ['class'],
   content: [

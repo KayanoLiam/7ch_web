@@ -1,3 +1,5 @@
+// 更新日志数据模型：供 Changelog 页面与构建脚本共享。
+// Changelog data model: shared by page rendering and build script.
 export interface ChangelogEntry {
   date: string;
   title: string;
@@ -5,6 +7,8 @@ export interface ChangelogEntry {
   changes: string[];
 }
 
+// 更新日志数据：由 scripts/update-changelog.cjs 生成/更新。
+// Changelog data: generated/updated by scripts/update-changelog.cjs.
 export const changelogData: ChangelogEntry[] = [
   {
     "date": "Feb 4, 2026",

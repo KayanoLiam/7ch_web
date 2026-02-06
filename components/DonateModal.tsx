@@ -11,6 +11,8 @@ import {
 } from './ui/dialog';
 import { X, Copy, Check, Heart } from 'lucide-react';
 
+// 捐赠弹窗：展示 XMR 地址并提供一键复制。
+// Donate modal: shows XMR address with one-click copy.
 interface DonateModalProps {
   open: boolean;
   onClose: () => void;
@@ -19,9 +21,13 @@ interface DonateModalProps {
 export const DonateModal: React.FC<DonateModalProps> = ({ open, onClose }) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  // 地址为只读展示；更换时只需更新此常量。
+  // Address is read-only; update here when rotated.
   const xmrAddress = "84Uyp3QwGbPZvqHBwo68FRbQHFephm1DUYMa8t8yhdC2RhzJM5uQPCbRMRq4q1KnyCZ4GWHzcvxqMB5b6pPmcDr7PVQchYJ";
 
   const copyToClipboard = () => {
+    // 复制后短暂展示成功图标，提升反馈感。
+    // After copy, show a short success state for feedback.
     navigator.clipboard.writeText(xmrAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

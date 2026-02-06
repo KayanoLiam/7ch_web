@@ -1,3 +1,5 @@
+/* 全局样式入口：Tailwind 指令与基础主题变量。 */
+/* Global stylesheet entry: Tailwind directives and base theme variables. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

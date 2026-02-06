@@ -2,6 +2,9 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { changelogData } from '../data/changelog';
 
+// 更新日志页：读取静态数据并按时间分组展示。
+// Changelog page: renders static changelog data in chronological sections.
+
 interface ChangelogProps {
     onBack: () => void;
 }

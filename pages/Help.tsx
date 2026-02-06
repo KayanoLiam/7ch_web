@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// 使用须知页：分章节讲解 BBS 规则与操作。
+// Help page: sectioned guide for BBS rules and usage.
+
 interface HelpProps {
   onBack: () => void;
 }
 
+// 通用章节组件：统一标题与间距。
+// Shared section component for consistent spacing and headings.
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
   <section id={id} className="mb-10 scroll-mt-20">
     <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
@@ -16,6 +21,8 @@ const Section: React.FC<{ id: string; title: string; children: React.ReactNode }
   </section>
 );
 
+// 小键帽样式：用于展示输入示例（如 Name#password）。
+// Keycap-like tag for inline input examples.
 const KeyTag: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span className="inline-block bg-gray-100 border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono text-gray-800 mx-1">
     {children}

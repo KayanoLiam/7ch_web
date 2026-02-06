@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// 隐私政策页：按章节展示政策内容并支持目录跳转。
+// Privacy policy page: sectioned content with table of contents navigation.
+
 interface PrivacyPolicyProps {
   onBack: () => void;
 }
 
+// 通用章节组件：统一标题样式与布局。
+// Shared section component for consistent layout.
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
   <section id={id} className="mb-10 scroll-mt-20">
     <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">

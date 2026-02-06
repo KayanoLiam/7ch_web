@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// 用户协议页：展示条款并支持目录导航。
+// Terms page: renders policies with table of contents navigation.
+
 interface TermsProps {
   onBack: () => void;
 }
 
+// 章节容器：保持一致的标题与正文样式。
+// Section container: consistent heading/body styles.
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
   <section id={id} className="mb-10 scroll-mt-20">
     <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
