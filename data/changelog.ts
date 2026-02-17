@@ -1,5 +1,3 @@
-// 更新日志数据模型：供 Changelog 页面与构建脚本共享。
-// Changelog data model: shared by page rendering and build script.
 export interface ChangelogEntry {
   date: string;
   title: string;
@@ -7,9 +5,95 @@ export interface ChangelogEntry {
   changes: string[];
 }
 
-// 更新日志数据：由 scripts/update-changelog.cjs 生成/更新。
-// Changelog data: generated/updated by scripts/update-changelog.cjs.
 export const changelogData: ChangelogEntry[] = [
+  {
+    "date": "Feb 12, 2026",
+    "title": "Update 2026-02-12",
+    "version": "build-20260212",
+    "changes": [
+      "[Backend] upgrade time to 0.3.47 and sync cve report",
+      "[Backend] upgrade sqlx to remediate RUSTSEC-2024-0363",
+      "[Backend] fix bytes CVE and update cve audit report",
+      "[Backend] docs: add english security findings and cve audit report",
+      "[Backend] fix trusted proxy IP handling and document high-risk findings",
+      "[Backend] refactor backup zig modules and add unit tests"
+    ]
+  },
+  {
+    "date": "Feb 11, 2026",
+    "title": "Update 2026-02-11",
+    "version": "build-20260211",
+    "changes": [
+      "[Backend] refactor: harden sse limits, proxy ip handling, and input guards",
+      "[Backend] chore: rewrite project docs and comments in English"
+    ]
+  },
+  {
+    "date": "Feb 10, 2026",
+    "title": "Update 2026-02-10",
+    "version": "build-20260210",
+    "changes": [
+      "[Backend] fix: support HEAD healthz checks for uptime monitors",
+      "[Backend] feat: add public healthz endpoint for uptime monitoring"
+    ]
+  },
+  {
+    "date": "Feb 9, 2026",
+    "title": "Update 2026-02-09",
+    "version": "build-20260209",
+    "changes": [
+      "[Backend] fix: add retry for pg_dump backup failures"
+    ]
+  },
+  {
+    "date": "Feb 8, 2026",
+    "title": "Update 2026-02-08",
+    "version": "build-20260208",
+    "changes": [
+      "[Backend] docs: align backend README with frontend API base logic",
+      "[Backend] docs: clarify local vs render port behavior"
+    ]
+  },
+  {
+    "date": "Feb 7, 2026",
+    "title": "Update 2026-02-07",
+    "version": "build-20260207",
+    "changes": [
+      "[Backend] docs: expand inline comments across repository",
+      "[Backend] fix: fallback to db increment when redis view count fails",
+      "[Backend] chore: enforce strict clippy denies and clean warnings (#4)",
+      "[Backend] Merge remote-tracking branch 'origin/main' into refactor/kaoru-vision",
+      "[Backend] chore: enforce strict clippy denies and clean warnings",
+      "[Backend] docs: add bilingual comments across rust backend"
+    ]
+  },
+  {
+    "date": "Feb 6, 2026",
+    "title": "Update 2026-02-06",
+    "version": "build-20260206",
+    "changes": [
+      "[Frontend] docs: expand bilingual comments across frontend",
+      "[Frontend] docs: add apache license and bilingual comments",
+      "[Backend] chore: tighten cors origins",
+      "[Backend] feat: enable redis tls via rustls",
+      "[Backend] fix: load dotenv for backup tool",
+      "[Backend] docs: document redis distributed lock",
+      "[Backend] feat: add redis cache and view count flush"
+    ]
+  },
+  {
+    "date": "Feb 5, 2026",
+    "title": "Update 2026-02-05",
+    "version": "build-20260205",
+    "changes": [
+      "[Frontend] fix: improve link segmentation in rich text parser",
+      "[Frontend] feat: add sse realtime notices",
+      "[Backend] docs: add bilingual detailed comments",
+      "[Backend] chore: remove backup data and require db url",
+      "[Backend] docs: expand backend readme and add license",
+      "[Backend] feat: add global sse events and build version"
+    ]
+  },
   {
     "date": "Feb 4, 2026",
     "title": "Update 2026-02-04",
@@ -18,6 +102,7 @@ export const changelogData: ChangelogEntry[] = [
       "[Frontend] Integrate changelog update into build process",
       "[Frontend] Update changelog with frontend feature entry",
       "[Frontend] Add changelog feature with page, data, and update script",
+      "[Backend] Fix DB URL fallback for Render",
       "[Backend] refactor: reorganize code structure and add backup tool"
     ]
   },

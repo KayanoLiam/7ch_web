@@ -1,5 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '../services/api';
 import { ThreadDetail, Post } from '../types';
 import { PostForm } from './PostForm';
@@ -16,60 +21,186 @@ interface RichTextProps {
   onQuoteClick: (id: number) => void;
 }
 
-const RichText: React.FC<RichTextProps> = ({ content, allPosts, onQuoteClick }) => {
-  // 将正文按“引用/链接”拆分为片段，便于逐段渲染。
-  // Split content by quote or URL tokens for piecewise rendering.
-  const parts = content.split(/(>>\d+|https?:\/\/[^\s]+)/g);
+const QUOTE_PROTOCOL = 'quote://';
+const quoteTokenPattern = />>(\d{1,7})/g;
+
+const parseQuoteId = (href?: string): number | null => {
+  if (!href?.startsWith(QUOTE_PROTOCOL)) return null;
+  const id = Number.parseInt(href.slice(QUOTE_PROTOCOL.length), 10);
+  return Number.isFinite(id) ? id : null;
+};
+
+const transformQuoteSyntax = (source: string): string => {
+  let inFence = false;
+  let fenceChar: '`' | '~' | null = null;
+  const lines = source.split('\n');
+
+  return lines.map((line) => {
+    const trimmed = line.trimStart();
+    const fenceMatch = trimmed.match(/^(```+|~~~+)/);
+
+    if (fenceMatch) {
+      const currentFenceChar = fenceMatch[1][0] as '`' | '~';
+      if (!inFence) {
+        inFence = true;
+        fenceChar = currentFenceChar;
+      } else if (fenceChar === currentFenceChar) {
+        inFence = false;
+        fenceChar = null;
+      }
+      return line;
+    }
+
+    if (inFence) return line;
+
+    // 避免改写 inline code 内的文本，只处理正文中的 >>123。
+    // Avoid rewriting inline code text; only transform plain text >>123 tokens.
+    return line
+      .split(/(`+[^`]*`+)/g)
+      .map((segment) => {
+        if (segment.startsWith('`') && segment.endsWith('`')) {
+          return segment;
+        }
+        return segment.replace(quoteTokenPattern, (_match, id) => `[>>${id}](${QUOTE_PROTOCOL}${id})`);
+      })
+      .join('');
+  }).join('\n');
+};
+
+interface QuoteAnchorProps {
+  targetId: number;
+  allPosts: Post[];
+  onQuoteClick: (id: number) => void;
+}
+
+const QuoteAnchor: React.FC<QuoteAnchorProps> = ({ targetId, allPosts, onQuoteClick }) => {
   const [hoveredPost, setHoveredPost] = useState<Post | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
-  const handleMouseEnter = (e: React.MouseEvent, targetId: number) => {
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     const post = allPosts.find(p => p.id === targetId);
     if (post) {
       setHoveredPost(post);
       // 基于目标元素计算 tooltip 的屏幕位置。
       // Compute tooltip position based on target element.
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      const rect = e.currentTarget.getBoundingClientRect();
       setTooltipPos({ x: rect.left, y: rect.bottom + 5 });
     }
   };
 
   return (
-    <div className="whitespace-pre-wrap break-words leading-relaxed text-[#333] text-[15px]">
-      {parts.map((part, index) => {
-        if (part.match(/^>>\d+$/)) {
-          const targetId = parseInt(part.substring(2));
-          return (
-            <span key={index} className="relative inline-block">
-              <button
-                className="text-[#0056b3] hover:underline cursor-pointer bg-transparent border-none p-0"
-                onClick={() => onQuoteClick(targetId)}
-                onMouseEnter={(e) => handleMouseEnter(e, targetId)}
-                onMouseLeave={() => setHoveredPost(null)}
+    <span className="relative inline-block">
+      <button
+        type="button"
+        className="text-[#0056b3] hover:underline cursor-pointer bg-transparent border-none p-0"
+        onClick={() => onQuoteClick(targetId)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setHoveredPost(null)}
+      >
+        {`>>${targetId}`}
+      </button>
+      {hoveredPost && hoveredPost.id === targetId && (
+        <span
+          className="fixed z-50 bg-white border border-gray-400 p-3 text-xs shadow-xl rounded max-w-md pointer-events-none text-left"
+          style={{ left: tooltipPos.x, top: tooltipPos.y }}
+        >
+          <span className="mb-2 border-b pb-1 text-gray-500 font-bold flex justify-between">
+            <span>{hoveredPost.id} : <span className="text-[#117743]">{hoveredPost.name}</span></span>
+            <span className="text-gray-400 text-[10px]">{hoveredPost.createdAt.split('T')[0]}</span>
+          </span>
+          <span className="max-h-40 overflow-hidden text-gray-800 leading-snug block">
+            {hoveredPost.content}
+          </span>
+        </span>
+      )}
+    </span>
+  );
+};
+
+const RichText: React.FC<RichTextProps> = ({ content, allPosts, onQuoteClick }) => {
+  const markdown = useMemo(() => transformQuoteSyntax(content), [content]);
+
+  return (
+    <div className="break-words leading-relaxed text-[#333] text-[15px]">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkBreaks]}
+        skipHtml
+        components={{
+          a: ({ href, children, ...props }) => {
+            const targetId = parseQuoteId(href);
+            if (targetId !== null) {
+              return (
+                <QuoteAnchor
+                  targetId={targetId}
+                  allPosts={allPosts}
+                  onQuoteClick={onQuoteClick}
+                />
+              );
+            }
+
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#0056b3] hover:underline break-all"
+                {...props}
               >
-                {part}
-              </button>
-              {hoveredPost && hoveredPost.id === targetId && (
-                <div
-                  className="fixed z-50 bg-white border border-gray-400 p-3 text-xs shadow-xl rounded max-w-md pointer-events-none text-left"
-                  style={{ left: tooltipPos.x, top: tooltipPos.y }}
-                >
-                  <div className="mb-2 border-b pb-1 text-gray-500 font-bold flex justify-between">
-                    <span>{hoveredPost.id} : <span className="text-[#117743]">{hoveredPost.name}</span></span>
-                    <span className="text-gray-400 text-[10px]">{hoveredPost.createdAt.split('T')[0]}</span>
-                  </div>
-                  <div className="max-h-40 overflow-hidden text-gray-800 leading-snug">
-                    {hoveredPost.content}
-                  </div>
-                </div>
-              )}
-            </span>
-          );
-        } else if (part.match(/^https?:\/\//)) {
-          return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-[#0056b3] hover:underline">{part}</a>
-        }
-        return <span key={index}>{part}</span>;
-      })}
+                {children}
+              </a>
+            );
+          },
+          p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>,
+          ul: ({ children }) => <ul className="mb-2 list-disc space-y-1 pl-5">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-2 list-decimal space-y-1 pl-5">{children}</ol>,
+          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+          blockquote: ({ children }) => (
+            <blockquote className="my-2 border-l-4 border-gray-300 pl-3 text-gray-700">{children}</blockquote>
+          ),
+          pre: ({ children }) => <div className="my-2">{children}</div>,
+          code: ({ inline, className, children, ...props }) => {
+            if (inline) {
+              return (
+                <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.92em]" {...props}>
+                  {children}
+                </code>
+              );
+            }
+
+            const match = /language-([a-zA-Z0-9_-]+)/.exec(className || '');
+            const code = String(children).replace(/\n$/, '');
+
+            return (
+              <SyntaxHighlighter
+                style={oneLight}
+                language={match?.[1] ?? 'text'}
+                PreTag="div"
+                customStyle={{
+                  margin: 0,
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.375rem',
+                  padding: '0.75rem',
+                  background: '#f8fafc',
+                  fontSize: '0.85rem',
+                }}
+              >
+                {code}
+              </SyntaxHighlighter>
+            );
+          },
+          table: ({ children }) => (
+            <div className="my-3 overflow-x-auto">
+              <table className="min-w-full border-collapse border border-gray-300 text-sm">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => <thead className="bg-gray-100">{children}</thead>,
+          tr: ({ children }) => <tr className="border-b border-gray-300">{children}</tr>,
+          th: ({ children }) => <th className="border border-gray-300 px-2 py-1 text-left font-bold">{children}</th>,
+          td: ({ children }) => <td className="border border-gray-300 px-2 py-1 align-top">{children}</td>,
+        }}
+      >
+        {markdown}
+      </ReactMarkdown>
     </div>
   );
 };
