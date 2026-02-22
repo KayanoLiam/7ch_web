@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    "date": "Feb 17, 2026",
+    "title": "Update 2026-02-17",
+    "version": "build-20260217",
+    "changes": [
+      "[Frontend] feat(thread): support markdown rendering and code highlighting"
+    ]
+  },
+  {
     "date": "Feb 12, 2026",
     "title": "Update 2026-02-12",
     "version": "build-20260212",
