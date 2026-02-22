@@ -1,4 +1,17 @@
-import { I7chAPI, Board, Thread, Post, ThreadDetail, CreateThreadRequest, CreatePostRequest, PaginatedThreads } from '../types';
+import {
+  I7chAPI,
+  Board,
+  Thread,
+  Post,
+  ThreadDetail,
+  CreateThreadRequest,
+  CreatePostRequest,
+  CreateSubscriptionLinkRequest,
+  CreateSubscriptionLinkResponse,
+  PaginatedThreads,
+  SubscriptionConvertRequest,
+  SubscriptionConvertResponse,
+} from '../types';
 
 // 本地 Mock：使用 LocalStorage 模拟后端 API 行为，便于无后端开发/演示。
 // Local mock: uses LocalStorage to emulate backend API for offline dev/demo.
@@ -264,6 +277,88 @@ export class MockService implements I7chAPI {
 
     this.save();
     return post;
+  }
+
+  async convertSubscription(payload: SubscriptionConvertRequest): Promise<SubscriptionConvertResponse> {
+    await this.delay(350);
+
+    if (payload.sourceFormat !== 'clash' || payload.targetFormat !== 'sing-box') {
+      throw new Error('currently only clash -> sing-box is supported');
+    }
+
+    const sourceUrl = payload.sourceUrl.trim();
+    if (!sourceUrl) {
+      throw new Error('sourceUrl cannot be empty');
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(sourceUrl);
+    } catch {
+      throw new Error('sourceUrl is invalid');
+    }
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error('sourceUrl must use http or https');
+    }
+
+    const now = Date.now();
+    const content = JSON.stringify({
+      log: { level: 'warn' },
+      outbounds: [
+        {
+          type: 'selector',
+          tag: 'proxy',
+          outbounds: ['mock-node']
+        },
+        {
+          type: 'vmess',
+          tag: 'mock-node',
+          server: 'example.com',
+          server_port: 443,
+          uuid: '00000000-0000-0000-0000-000000000000'
+        },
+        {
+          type: 'direct',
+          tag: 'direct'
+        }
+      ],
+      route: {
+        final: 'proxy'
+      }
+    }, null, 2);
+
+    return {
+      content,
+      warnings: ['Mock mode: this converted result is generated locally for UI testing.'],
+      meta: {
+        sourceFormat: 'clash',
+        targetFormat: 'sing-box',
+        elapsedMs: 320 + (now % 150),
+        contentBytes: new TextEncoder().encode(content).length,
+        nodeCount: 1
+      }
+    };
+  }
+
+  async createSubscriptionLink(payload: CreateSubscriptionLinkRequest): Promise<CreateSubscriptionLinkResponse> {
+    await this.delay(120);
+    if (!payload.sourceUrl || payload.sourceUrl.trim().length === 0) {
+      throw new Error('sourceUrl cannot be empty');
+    }
+    const expiresIn = payload.expiresInSeconds ?? 0;
+    const expiresAt = expiresIn > 0 ? new Date(Date.now() + expiresIn * 1000).toISOString() : undefined;
+    const fakeToken = btoa(JSON.stringify({
+      src: payload.sourceUrl,
+      sf: payload.sourceFormat,
+      tf: payload.targetFormat,
+      iat: Date.now()
+    })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    return {
+      token: fakeToken,
+      url: `${window.location.origin}/api/sub?token=${fakeToken}`,
+      expiresAt
+    };
   }
 }
 

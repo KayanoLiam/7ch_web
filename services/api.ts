@@ -1,4 +1,17 @@
-import { Board, CreatePostRequest, CreateThreadRequest, I7chAPI, PaginatedThreads, Post, Thread, ThreadDetail } from "../types";
+import {
+  Board,
+  CreateSubscriptionLinkRequest,
+  CreateSubscriptionLinkResponse,
+  CreatePostRequest,
+  CreateThreadRequest,
+  I7chAPI,
+  PaginatedThreads,
+  Post,
+  SubscriptionConvertRequest,
+  SubscriptionConvertResponse,
+  Thread,
+  ThreadDetail,
+} from "../types";
 import { mockApi } from "./mockService";
 
 // 真实 API 实现：集中处理 fetch/JSON/错误与缓存策略。
@@ -24,7 +37,19 @@ class RealService implements I7chAPI {
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed: ${res.status} ${res.statusText}`);
+      let message = `Request failed: ${res.status} ${res.statusText}`;
+      const contentType = res.headers.get("Content-Type") || "";
+      if (contentType.toLowerCase().includes("application/json")) {
+        try {
+          const body = await res.json() as { message?: string };
+          if (body.message && body.message.trim().length > 0) {
+            message = body.message;
+          }
+        } catch {
+          // Keep fallback message when body is not valid JSON.
+        }
+      }
+      throw new Error(message);
     }
 
     return res.json() as Promise<T>;
@@ -53,6 +78,20 @@ class RealService implements I7chAPI {
 
   createPost(payload: CreatePostRequest): Promise<Post> {
     return this.request<Post>("/api/posts", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  convertSubscription(payload: SubscriptionConvertRequest): Promise<SubscriptionConvertResponse> {
+    return this.request<SubscriptionConvertResponse>("/api/subscription/convert", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  createSubscriptionLink(payload: CreateSubscriptionLinkRequest): Promise<CreateSubscriptionLinkResponse> {
+    return this.request<CreateSubscriptionLinkResponse>("/api/subscription/link", {
       method: "POST",
       body: JSON.stringify(payload),
     });

@@ -50,7 +50,7 @@
 ├── App.tsx                  # 主路由与页面骨架
 ├── index.tsx                # 应用入口
 ├── i18n.ts                  # 国际化资源与初始化
-├── pages/                   # 静态页面（Docs/Help/Terms/Privacy/QA）
+├── pages/                   # 页面（Boards/Docs/Help/Tools 等）
 ├── components/              # UI 与业务组件
 ├── services/
 │   ├── api.ts               # 真正 API 客户端（fetch）
@@ -115,6 +115,7 @@ VITE_USE_MOCK=false
 - `Thread`：帖子列表项（含 OP 预览）
 - `ThreadDetail`：帖子详情（含楼层）
 - `CreateThreadRequest / CreatePostRequest`：发帖与回帖请求体
+- `SubscriptionConvertRequest / SubscriptionConvertResponse`：订阅转换请求与响应
 
 核心调用在 `services/api.ts`：
 
@@ -123,6 +124,9 @@ VITE_USE_MOCK=false
 - `GET /api/threads/:threadId`
 - `POST /api/threads`
 - `POST /api/posts`
+- `POST /api/subscription/convert`（当前仅 `clash -> sing-box`）
+- `POST /api/subscription/link`（生成安全订阅链接）
+- `GET /api/sub?token=...`（通过安全 token 获取转换后订阅内容）
 
 响应字段采用 **camelCase**，与 TypeScript 类型保持一致。
 

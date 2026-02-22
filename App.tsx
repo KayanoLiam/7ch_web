@@ -27,6 +27,7 @@ import { Terms } from './pages/Terms';
 import { Help } from './pages/Help';
 import { QA } from './pages/QA';
 import { Changelog } from './pages/Changelog';
+import { SubscriptionConvert } from './pages/SubscriptionConvert';
 
 // 应用入口：路由、全局状态、SSE 通知、以及主要布局。
 // App entry: routing, global state, SSE notices, and overall layout.
@@ -932,6 +933,7 @@ const App: React.FC = () => {
         <Link to="/help"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.help')}</button></Link>
         <Link to="/QA"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.QA')}</button></Link>
         <Link to="/changelog"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">Changelog</button></Link>
+        <Link to="/tools/convert"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">订阅转换</button></Link>
         <button className="text-gray-500 hover:underline hover:text-[#0056b3]" onClick={() => setShowDonateModal(true)}>{t('footer.donate')}</button>
       </div>
       <div>&copy; 2024 7ch Project. All rights reserved.</div>
@@ -1042,6 +1044,7 @@ const App: React.FC = () => {
           <Route path="/help" element={<Help onBack={() => navigate('/')} />} />
           <Route path="/QA" element={<QA onBack={() => navigate('/')} />} />
           <Route path="/changelog" element={<Changelog onBack={() => navigate('/')} />} />
+          <Route path="/tools/convert" element={<SubscriptionConvert onBack={() => navigate('/')} />} />
         </Routes>
       </main>
       {renderFooter()}

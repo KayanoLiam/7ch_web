@@ -48,6 +48,39 @@ export interface CreatePostRequest {
   content: string;
 }
 
+export interface SubscriptionConvertRequest {
+  sourceUrl: string;
+  sourceFormat: 'clash';
+  targetFormat: 'sing-box';
+}
+
+export interface SubscriptionConvertMeta {
+  sourceFormat: 'clash';
+  targetFormat: 'sing-box';
+  elapsedMs: number;
+  contentBytes: number;
+  nodeCount?: number;
+}
+
+export interface SubscriptionConvertResponse {
+  content: string;
+  warnings: string[];
+  meta: SubscriptionConvertMeta;
+}
+
+export interface CreateSubscriptionLinkRequest {
+  sourceUrl: string;
+  sourceFormat: 'clash';
+  targetFormat: 'sing-box';
+  expiresInSeconds?: number;
+}
+
+export interface CreateSubscriptionLinkResponse {
+  url: string;
+  token: string;
+  expiresAt?: string;
+}
+
 // 分页返回结构 / Pagination response
 export interface PaginatedThreads {
   threads: Thread[];
@@ -64,4 +97,6 @@ export interface I7chAPI {
   getThreadContent(threadId: string, afterPostId?: number): Promise<ThreadDetail>;
   createThread(payload: CreateThreadRequest): Promise<string>; // returns threadId
   createPost(payload: CreatePostRequest): Promise<Post>;
+  convertSubscription(payload: SubscriptionConvertRequest): Promise<SubscriptionConvertResponse>;
+  createSubscriptionLink(payload: CreateSubscriptionLinkRequest): Promise<CreateSubscriptionLinkResponse>;
 }
