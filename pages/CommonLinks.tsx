@@ -3,6 +3,7 @@ import { ArrowLeft, ExternalLink, Lock, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { commonLinks, getCommonLinkById } from '../data/commonLinks';
+import { formatLocalizedCalendarDate } from '../lib/date';
 
 interface CommonLinksBoardProps {
   onBack: () => void;
@@ -12,15 +13,6 @@ interface CommonLinksBoardProps {
 interface CommonLinkDetailProps {
   onBack: () => void;
 }
-
-const formatDateForLocale = (dateString: string, language: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat(language === 'ja-JP' ? 'ja-JP' : 'zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-};
 
 export const CommonLinksBoard: React.FC<CommonLinksBoardProps> = ({ onBack, search }) => {
   const { t, i18n } = useTranslation();
@@ -74,7 +66,7 @@ export const CommonLinksBoard: React.FC<CommonLinksBoardProps> = ({ onBack, sear
               className="cursor-pointer rounded-sm border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800/70"
             >
               <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-gray-500 dark:text-gray-400">
-                <span>{formatDateForLocale(item.updatedAt, i18n.language)}</span>
+                <span>{formatLocalizedCalendarDate(new Date(item.updatedAt), i18n.language)}</span>
                 <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-sky-700 dark:border-sky-700 dark:bg-sky-900/40 dark:text-sky-200">
                   {t('commonLinks.staticBadge')}
                 </span>
@@ -160,7 +152,7 @@ export const CommonLinkDetail: React.FC<CommonLinkDetailProps> = ({ onBack }) =>
 
         <div className="mb-4 rounded-sm border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-bold text-gray-500 dark:text-gray-400">
-            <span>{formatDateForLocale(item.updatedAt, i18n.language)}</span>
+            <span>{formatLocalizedCalendarDate(new Date(item.updatedAt), i18n.language)}</span>
             <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-sky-700 dark:border-sky-700 dark:bg-sky-900/40 dark:text-sky-200">
               {t('commonLinks.staticBadge')}
             </span>

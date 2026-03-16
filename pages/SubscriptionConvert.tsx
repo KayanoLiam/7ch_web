@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Copy, Download, RefreshCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { formatLocalizedCalendarDateTime } from '../lib/date';
 import { api } from '../services/api';
 import { CreateSubscriptionLinkResponse, SubscriptionConvertResponse } from '../types';
 
@@ -9,7 +10,7 @@ interface SubscriptionConvertProps {
 }
 
 export const SubscriptionConvert: React.FC<SubscriptionConvertProps> = ({ onBack }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [sourceUrl, setSourceUrl] = useState('');
   const [result, setResult] = useState<SubscriptionConvertResponse | null>(null);
   const [linkResult, setLinkResult] = useState<CreateSubscriptionLinkResponse | null>(null);
@@ -279,7 +280,7 @@ export const SubscriptionConvert: React.FC<SubscriptionConvertProps> = ({ onBack
 
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {linkResult.expiresAt ? (
-                  <span>{t('tools.convert.secureLink.expires')} {new Date(linkResult.expiresAt).toLocaleString()}</span>
+                  <span>{t('tools.convert.secureLink.expires')} {formatLocalizedCalendarDateTime(new Date(linkResult.expiresAt), i18n.language)}</span>
                 ) : (
                   <span>{t('tools.convert.secureLink.expires')} {t('tools.convert.secureLink.never')}</span>
                 )}

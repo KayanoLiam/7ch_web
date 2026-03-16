@@ -1,14 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { formatLocalizedCalendarDate } from '../lib/date';
 import { getNextRecoveryDate } from '../lib/servicePause';
-
-const formatDateForLocale = (date: Date, locale: string) =>
-  new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
 
 const getRetryPath = (search: string) => {
   const params = new URLSearchParams(search);
@@ -26,10 +20,7 @@ export const ServicePaused: React.FC<ServicePausedProps> = ({ onOpenDonate }) =>
   const location = useLocation();
 
   const retryPath = getRetryPath(location.search);
-  const nextRecoveryDate = formatDateForLocale(
-    getNextRecoveryDate(),
-    i18n.language === 'ja-JP' ? 'ja-JP' : 'zh-CN'
-  );
+  const nextRecoveryDate = formatLocalizedCalendarDate(getNextRecoveryDate(), i18n.language);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] justify-center bg-[#f0f0f0] px-4 py-12 dark:bg-background">
