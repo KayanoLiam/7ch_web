@@ -45,7 +45,7 @@ export const Help: React.FC<HelpProps> = ({ onBack }) => {
     { id: 'sage', label: t('help.toc.sage') },
     { id: 'anchors', label: t('help.toc.anchors') },
     { id: 'ids', label: t('help.toc.ids') },
-    { id: 'subscription', label: t('help.toc.subscription', { defaultValue: '订阅转换' }) },
+    { id: 'subscription', label: t('help.toc.subscription') },
   ];
 
   return (
@@ -171,19 +171,22 @@ export const Help: React.FC<HelpProps> = ({ onBack }) => {
             </ul>
           </Section>
 
-          <Section id="subscription" title={t('help.section.subscription', { defaultValue: '订阅转换工具（Clash -> sing-box）' })}>
+          <Section id="subscription" title={t('help.section.subscription')}>
             <p>
-              {t('help.subscription.intro', { defaultValue: '你可以在工具页面中输入 Clash 订阅链接，在线转换为 sing-box 配置。当前版本只支持单向转换。' })}
+              {t('help.subscription.intro')}
             </p>
             <ul className="list-disc list-inside pl-2 space-y-2 mt-2 text-sm">
               <li>
-                <strong>{t('help.subscription.route', { defaultValue: '入口路径：/tools/convert' })}</strong>
+                <strong>{t('help.subscription.route')}</strong>
               </li>
               <li>
-                <strong>{t('help.subscription.support', { defaultValue: '支持方向：clash -> sing-box' })}</strong>
+                <strong>{t('help.subscription.support')}</strong>
               </li>
               <li>
-                <strong>{t('help.subscription.security', { defaultValue: '出于安全考虑，仅允许公网 http/https 链接。' })}</strong>
+                <strong>{t('help.subscription.security')}</strong>
+              </li>
+              <li>
+                <strong>{t('help.subscription.status')}</strong>
               </li>
             </ul>
           </Section>

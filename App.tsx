@@ -955,7 +955,14 @@ const App: React.FC = () => {
         <Link to="/help"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.help')}</button></Link>
         <Link to="/QA"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">{t('footer.QA')}</button></Link>
         <Link to="/changelog"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">Changelog</button></Link>
-        <Link to="/tools/convert"><button className="text-gray-500 hover:underline hover:text-[#0056b3]">订阅转换</button></Link>
+        <Link to="/tools/convert">
+          <button className="inline-flex items-center gap-2 text-gray-500 hover:underline hover:text-[#0056b3]">
+            <span>{t('tools.convert.link')}</span>
+            <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+              {t('tools.convert.badge')}
+            </span>
+          </button>
+        </Link>
         <button className="text-gray-500 hover:underline hover:text-[#0056b3]" onClick={() => setShowDonateModal(true)}>{t('footer.donate')}</button>
       </div>
       <div>&copy; 2024 7ch Project. All rights reserved.</div>
