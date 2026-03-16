@@ -831,7 +831,7 @@ const App: React.FC = () => {
               ☰
             </button>
             {showMobileMenu && (
-              <div className="absolute right-0 z-50 mt-2 w-48 rounded border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+              <div className="absolute right-0 z-50 mt-2 w-56 rounded border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
                 <div className="py-1">
                   <button
                     className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800"
@@ -861,7 +861,7 @@ const App: React.FC = () => {
                     <div className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       {t('theme.title')}
                     </div>
-                    <ThemeSwitcher />
+                    <ThemeSwitcher compact fullWidth />
                   </div>
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-1">
                     {['zh-CN', 'ja-JP'].map(l => (
