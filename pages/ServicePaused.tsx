@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { getNextRecoveryDate } from '../lib/servicePause';
 
 const formatDateForLocale = (date: Date, locale: string) =>
@@ -16,7 +16,11 @@ const getRetryPath = (search: string) => {
   return from && from.startsWith('/') ? from : '/';
 };
 
-export const ServicePaused: React.FC = () => {
+interface ServicePausedProps {
+  onOpenDonate?: () => void;
+}
+
+export const ServicePaused: React.FC<ServicePausedProps> = ({ onOpenDonate }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,8 +33,9 @@ export const ServicePaused: React.FC = () => {
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] justify-center bg-[#f0f0f0] px-4 py-12 dark:bg-background">
-      <div className="w-full max-w-3xl">
-        <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-10">
+      <div className="w-full max-w-5xl flex flex-col md:flex-row gap-6 items-start">
+        {/* Left Side: Main Error Content */}
+        <div className="flex-1 w-full rounded-sm border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-10">
           <div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-4 dark:border-gray-700 sm:flex-row sm:items-center">
             <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 sm:text-2xl">
               {t('servicePause.title')}
@@ -83,6 +88,68 @@ export const ServicePaused: React.FC = () => {
             >
               {t('servicePause.home')}
             </button>
+          </div>
+        </div>
+
+        {/* Right Side: Still Available Services */}
+        <div className="w-full md:w-80 shrink-0 sticky top-6 flex flex-col gap-3">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 px-1">
+            {t('servicePause.availableServices')}
+          </h2>
+          <div className="flex flex-col rounded-sm border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
+            <Link to="/changelog" className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium">
+              Changelog
+            </Link>
+            <Link to="/help" className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium">
+              {t('footer.help')}
+            </Link>
+            <Link to="/QA" className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium">
+              {t('footer.QA')}
+            </Link>
+            <Link to="/docs" className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium">
+              {t('footer.tech')}
+            </Link>
+            <Link to="/privacy" className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium">
+              {t('footer.privacy')}
+            </Link>
+            <Link to="/terms" className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium">
+              {t('footer.terms')}
+            </Link>
+            <Link to="/tools/convert" className="flex px-4 py-3 text-sm text-gray-700 items-center justify-between hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium">
+              <span>{t('tools.convert.link')}</span>
+              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:border-amber-700 dark:bg-amber-900/50 dark:text-amber-200">
+                {t('tools.convert.badge')}
+              </span>
+            </Link>
+
+            {/* Cobalt.tools link */}
+            <a
+              href="https://cobalt.tools"
+              target="_blank"
+              rel="noreferrer"
+              className="group flex flex-col px-4 py-3 hover:bg-gray-50 border-b border-gray-100 dark:border-gray-800 dark:hover:bg-gray-800 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-[#0056b3] dark:group-hover:text-sky-300 transition-colors">
+                  {t('servicePause.cobaltTitle')}
+                </span>
+                <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold dark:bg-blue-900/30 dark:text-blue-300">
+                  External
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500 line-clamp-1">
+                {t('servicePause.cobaltDesc')}
+              </p>
+            </a>
+
+            {onOpenDonate && (
+              <button
+                onClick={onOpenDonate}
+                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors font-medium"
+              >
+                {t('footer.donate')}
+              </button>
+            )}
           </div>
         </div>
       </div>

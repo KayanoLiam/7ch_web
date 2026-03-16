@@ -1075,7 +1075,7 @@ const App: React.FC = () => {
           } />
 
           {/* 文档页面 */}
-          <Route path="/service-paused" element={<ServicePaused />} />
+          <Route path="/service-paused" element={<ServicePaused onOpenDonate={() => setShowDonateModal(true)} />} />
           <Route path="/docs" element={<Docs onBack={() => navigate('/')} />} />
           <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
           <Route path="/terms" element={<Terms onBack={() => navigate('/')} />} />
@@ -1085,7 +1085,7 @@ const App: React.FC = () => {
           <Route path="/tools/convert" element={<SubscriptionConvert onBack={() => navigate('/')} />} />
         </Routes>
       </main>
-      {renderFooter()}
+      {location.pathname !== '/service-paused' && renderFooter()}
       <DonateModal open={showDonateModal} onClose={() => setShowDonateModal(false)} />
     </div>
   );
