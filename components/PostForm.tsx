@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { buildServicePausedPath, isServicePausedCandidateError } from '../lib/servicePause';
+import { buildKnownErrorRedirectPath } from '../lib/errorRedirect';
 import { CreatePostRequest, CreateThreadRequest } from '../types';
 
 // 发帖/回帖表单：同一组件兼顾新线程与回复。
@@ -59,8 +59,9 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
         setContent('');
       }
     } catch (err) {
-      if (isServicePausedCandidateError(err)) {
-        window.location.assign(buildServicePausedPath(`${location.pathname}${location.search}`));
+      const redirectPath = buildKnownErrorRedirectPath(err, `${location.pathname}${location.search}`);
+      if (redirectPath) {
+        window.location.assign(redirectPath);
         return;
       }
       console.error(err);

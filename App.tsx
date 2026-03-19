@@ -28,10 +28,11 @@ import { Terms } from './pages/Terms';
 import { Help } from './pages/Help';
 import { QA } from './pages/QA';
 import { Changelog } from './pages/Changelog';
+import { RateLimited } from './pages/RateLimited';
 import { ServicePaused } from './pages/ServicePaused';
 import { SubscriptionConvert } from './pages/SubscriptionConvert';
 import { CommonLinksBoard, CommonLinkDetail } from './pages/CommonLinks';
-import { buildServicePausedPath, isServicePausedCandidateError } from './lib/servicePause';
+import { buildKnownErrorRedirectPath } from './lib/errorRedirect';
 import { commonLinksBoard } from './data/commonLinks';
 
 // 应用入口：路由、全局状态、SSE 通知、以及主要布局。
@@ -114,8 +115,9 @@ const BoardView: React.FC<{
       setTotalPages(data.totalPages);
       setHasMore(page < data.totalPages);
     } catch (error) {
-      if (isServicePausedCandidateError(error)) {
-        navigate(buildServicePausedPath(`${location.pathname}${location.search}`));
+      const redirectPath = buildKnownErrorRedirectPath(error, `${location.pathname}${location.search}`);
+      if (redirectPath) {
+        navigate(redirectPath);
         return;
       }
       console.error('Failed to load threads:', error);
@@ -371,12 +373,12 @@ const FavoritesView: React.FC<{
         const validThreads = results
           .filter((result): result is PromiseFulfilledResult<Thread> => result.status === 'fulfilled')
           .map(result => result.value);
-        const hasServicePauseFailure = results.some(
-          (result) =>
-            result.status === 'rejected' && isServicePausedCandidateError(result.reason)
-        );
-        if (ids.length > 0 && hasServicePauseFailure && validThreads.length === 0) {
-          navigate(buildServicePausedPath(`${location.pathname}${location.search}`));
+        const redirectPath = results.reduce<string | null>((matchedPath, result) => {
+          if (matchedPath || result.status !== 'rejected') return matchedPath;
+          return buildKnownErrorRedirectPath(result.reason, `${location.pathname}${location.search}`);
+        }, null);
+        if (ids.length > 0 && redirectPath && validThreads.length === 0) {
+          navigate(redirectPath);
           return;
         }
         validThreads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -693,8 +695,9 @@ const App: React.FC = () => {
     api.getBoards()
       .then((data) => setBoards(mergeBoardsWithStatic(data)))
       .catch((e: any) => {
-        if (isServicePausedCandidateError(e)) {
-          navigate(buildServicePausedPath(`${location.pathname}${location.search}`));
+        const redirectPath = buildKnownErrorRedirectPath(e, `${location.pathname}${location.search}`);
+        if (redirectPath) {
+          navigate(redirectPath);
           return;
         }
         setBoardsError(String(e?.message ?? e) || '加载失败');
@@ -1099,6 +1102,7 @@ const App: React.FC = () => {
 
           {/* 文档页面 */}
           <Route path="/service-paused" element={<ServicePaused onOpenDonate={() => setShowDonateModal(true)} />} />
+          <Route path="/rate-limited" element={<RateLimited />} />
           <Route path="/docs" element={<Docs onBack={() => navigate('/')} />} />
           <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
           <Route path="/terms" element={<Terms onBack={() => navigate('/')} />} />
@@ -1108,7 +1112,7 @@ const App: React.FC = () => {
           <Route path="/tools/convert" element={<SubscriptionConvert onBack={() => navigate('/')} />} />
         </Routes>
       </main>
-      {location.pathname !== '/service-paused' && renderFooter()}
+      {location.pathname !== '/service-paused' && location.pathname !== '/rate-limited' && renderFooter()}
       <DonateModal open={showDonateModal} onClose={() => setShowDonateModal(false)} />
     </div>
   );

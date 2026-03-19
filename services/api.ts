@@ -12,6 +12,7 @@ import {
   Thread,
   ThreadDetail,
 } from "../types";
+import { RateLimitedError } from "../lib/rateLimit";
 import { ServicePausedCandidateError } from "../lib/servicePause";
 import { mockApi } from "./mockService";
 
@@ -20,6 +21,23 @@ import { mockApi } from "./mockService";
 
 const REQUEST_TIMEOUT_MS = 9000;
 const forceServicePaused = ((import.meta.env.VITE_FORCE_SERVICE_PAUSED as string | undefined) ?? "false") === "true";
+
+const parseRetryAfterSeconds = (value: string | null) => {
+  if (!value) return undefined;
+
+  const seconds = Number.parseInt(value, 10);
+  if (Number.isFinite(seconds) && seconds > 0) {
+    return seconds;
+  }
+
+  const retryAt = Date.parse(value);
+  if (!Number.isFinite(retryAt)) {
+    return undefined;
+  }
+
+  const deltaSeconds = Math.ceil((retryAt - Date.now()) / 1000);
+  return deltaSeconds > 0 ? deltaSeconds : undefined;
+};
 
 class RealService implements I7chAPI {
   constructor(private readonly baseUrl: string) { }
@@ -70,6 +88,7 @@ class RealService implements I7chAPI {
 
     if (!res.ok) {
       let message = `Request failed: ${res.status} ${res.statusText}`;
+      const retryAfterSeconds = parseRetryAfterSeconds(res.headers.get("Retry-After"));
       const contentType = res.headers.get("Content-Type") || "";
       if (contentType.toLowerCase().includes("application/json")) {
         try {
@@ -80,6 +99,13 @@ class RealService implements I7chAPI {
         } catch {
           // Keep fallback message when body is not valid JSON.
         }
+      }
+      if (res.status === 429) {
+        throw new RateLimitedError(message, {
+          path,
+          status: res.status,
+          retryAfterSeconds,
+        });
       }
       if (res.status >= 500) {
         throw new ServicePausedCandidateError(message, {

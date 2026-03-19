@@ -7,7 +7,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { buildServicePausedPath, isServicePausedCandidateError } from '../lib/servicePause';
+import { buildKnownErrorRedirectPath } from '../lib/errorRedirect';
 import { useTheme } from './theme-provider';
 import { api } from '../services/api';
 import { ThreadDetail, Post } from '../types';
@@ -280,8 +280,9 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
       const res = await api.getThreadContent(threadId);
       setData(res);
     } catch (e) {
-      if (isServicePausedCandidateError(e)) {
-        navigate(buildServicePausedPath(`${location.pathname}${location.search}`));
+      const redirectPath = buildKnownErrorRedirectPath(e, `${location.pathname}${location.search}`);
+      if (redirectPath) {
+        navigate(redirectPath);
         return;
       }
       console.error(e);

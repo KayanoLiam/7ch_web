@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Copy, Download, RefreshCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { formatLocalizedCalendarDateTime } from '../lib/date';
+import { buildKnownErrorRedirectPath } from '../lib/errorRedirect';
 import { api } from '../services/api';
 import { CreateSubscriptionLinkResponse, SubscriptionConvertResponse } from '../types';
 
@@ -11,6 +13,8 @@ interface SubscriptionConvertProps {
 
 export const SubscriptionConvert: React.FC<SubscriptionConvertProps> = ({ onBack }) => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sourceUrl, setSourceUrl] = useState('');
   const [result, setResult] = useState<SubscriptionConvertResponse | null>(null);
   const [linkResult, setLinkResult] = useState<CreateSubscriptionLinkResponse | null>(null);
@@ -42,6 +46,11 @@ export const SubscriptionConvert: React.FC<SubscriptionConvertProps> = ({ onBack
       });
       setResult(converted);
     } catch (err) {
+      const redirectPath = buildKnownErrorRedirectPath(err, `${location.pathname}${location.search}`);
+      if (redirectPath) {
+        navigate(redirectPath);
+        return;
+      }
       const message = err instanceof Error ? err.message : t('tools.convert.convert.failed');
       setError(message);
     } finally {
@@ -69,6 +78,11 @@ export const SubscriptionConvert: React.FC<SubscriptionConvertProps> = ({ onBack
       });
       setLinkResult(link);
     } catch (err) {
+      const redirectPath = buildKnownErrorRedirectPath(err, `${location.pathname}${location.search}`);
+      if (redirectPath) {
+        navigate(redirectPath);
+        return;
+      }
       const message = err instanceof Error ? err.message : t('tools.convert.link.failed');
       setError(message);
     } finally {
