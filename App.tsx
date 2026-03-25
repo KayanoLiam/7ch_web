@@ -8,7 +8,6 @@ import { PostForm } from './components/PostForm';
 import { ThreadView } from './components/ThreadDetail';
 import { Button } from './components/ui/button';
 import { DonateModal } from './components/DonateModal';
-import { InlineErrorNotice } from './components/InlineErrorNotice';
 import { Pagination } from './components/Pagination';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
 
@@ -278,9 +277,64 @@ const BoardView: React.FC<{
     return text.includes(s);
   }) : threads;
 
+  const renderThreadsErrorState = () => (
+    <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-10">
+      <div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-4 dark:border-gray-700 sm:flex-row sm:items-center">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 sm:text-2xl">
+          {t('error.loadThreadsTitle')}
+        </h2>
+        <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/50 dark:text-amber-200 dark:ring-amber-800/40">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+          {t('error.loadThreadsBadge')}
+        </span>
+      </div>
+
+      <div className="mb-8 space-y-4 text-[15px] leading-relaxed text-gray-700 dark:text-gray-300">
+        <p className="font-medium text-gray-900 dark:text-gray-100">{t('error.loadThreadsLead')}</p>
+        <p>{threadsError}</p>
+        <div className="rounded border border-sky-100 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
+          <span className="mb-1 block font-bold">{t('error.loadThreadsNoteTitle')}</span>
+          {t('error.loadThreadsNoteBody')}
+        </div>
+      </div>
+
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
+          <div className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">{t('error.loadThreadsActionLabel')}</div>
+          <div className="text-lg font-bold text-amber-700 dark:text-amber-300">{t('error.loadThreadsActionValue')}</div>
+          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('error.loadThreadsActionBody')}</div>
+        </div>
+        <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
+          <div className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">{t('error.loadThreadsCauseLabel')}</div>
+          <div className="text-lg font-bold text-gray-700 dark:text-gray-100">{t('error.loadThreadsCauseValue')}</div>
+          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('error.loadThreadsCauseBody')}</div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 border-t border-gray-200 pt-6 dark:border-gray-700">
+        <button
+          type="button"
+          onClick={() => void loadThreads(currentPage, false)}
+          className="rounded-sm bg-[#2da0b3] px-6 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#238a9b]"
+        >
+          {t('servicePause.retry')}
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="rounded-sm border border-gray-300 bg-white px-6 py-2 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+        >
+          {t('servicePause.home')}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] dark:bg-background">
       <div className="max-w-4xl mx-auto py-6 px-2 sm:px-4">
+        {threadsError && threads.length === 0 ? renderThreadsErrorState() : (
+          <>
         {!isAll && (
           <div className="mb-6 flex justify-center">
             {!showPostForm ? (
@@ -310,12 +364,11 @@ const BoardView: React.FC<{
           </div>
         )}
 
-        {threadsError && (
-          <InlineErrorNotice
-            title={t('error.loadThreadsTitle')}
-            message={threadsError}
-            className="mb-4"
-          />
+        {threadsError && threads.length > 0 && (
+          <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+            <div className="font-bold">{t('error.loadThreadsTitle')}</div>
+            <div>{threadsError}</div>
+          </div>
         )}
 
         <div className="space-y-4">
@@ -355,6 +408,8 @@ const BoardView: React.FC<{
               <div className="text-gray-500 dark:text-gray-400">{t('pagination.no_more')}</div>
             )}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

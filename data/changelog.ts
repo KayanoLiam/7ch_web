@@ -11,8 +11,12 @@ export const changelogData: ChangelogEntry[] = [
     "title": "Update 2026-03-25",
     "version": "build-20260325",
     "changes": [
+      "[Frontend] docs: update database deployment notes",
+      "[Frontend] fix: promote board load failures to page state",
       "[Frontend] fix: unify frontend error notice styling",
       "[Frontend] fix: narrow service pause redirect handling",
+      "[Backend] docs: explain neon and supabase failover",
+      "[Backend] fix: address clippy needless borrow",
       "[Backend] fix: flush view counts to active databases",
       "[Backend] feat: add automatic database failback"
     ]
@@ -236,8 +240,7 @@ export const changelogData: ChangelogEntry[] = [
       "[Frontend] Update vercel.json",
       "[Frontend] Update frontend: modify App.tsx, ThreadDetail.tsx and add vercel.json",
       "[Frontend] Update frontend components",
-      "[Frontend] Update frontend: add DonateModal component and dialog UI",
-      "[Backend] feat(logging): add env_logger middleware"
+      "[Frontend] Update frontend: add DonateModal component and dialog UI"
     ]
   },
   {
@@ -248,10 +251,7 @@ export const changelogData: ChangelogEntry[] = [
       "[Frontend] feat(i18n): add internationalization for all static pages",
       "[Frontend] docs(qa): update contact email address",
       "[Frontend] feat(ui): implement client-side search for boards and threads",
-      "[Frontend] fix(types): include vite/client for ImportMeta env typing",
-      "[Frontend] perf(api): disable caching with no-store for fetch",
-      "[Frontend] chore(repo): initial frontend import",
-      "[Backend] feat(api): add rate limiting middleware"
+      "[Frontend] fix(types): include vite/client for ImportMeta env typing"
     ]
   }
 ];
