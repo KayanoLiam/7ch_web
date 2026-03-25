@@ -77,6 +77,7 @@ const BoardView: React.FC<{
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [threadsError, setThreadsError] = useState<string | null>(null);
 
   // 设备判定：宽度 < 768 视为移动端。
   // Device detection: width < 768 treated as mobile.
@@ -103,6 +104,7 @@ const BoardView: React.FC<{
   const loadThreads = async (page: number, append: boolean = false) => {
     if (loading || !boardId) return;
     setLoading(true);
+    setThreadsError(null);
 
     try {
       const data = await api.getThreads(boardId, page);
@@ -120,6 +122,7 @@ const BoardView: React.FC<{
         navigate(redirectPath);
         return;
       }
+      setThreadsError(error instanceof Error ? error.message : t('error.requestFailed'));
       console.error('Failed to load threads:', error);
     } finally {
       setLoading(false);
@@ -131,6 +134,7 @@ const BoardView: React.FC<{
   useEffect(() => {
     if (boardId) {
       setThreads([]);
+      setThreadsError(null);
       setCurrentPage(1);
       setHasMore(true);
       loadThreads(1, false);
@@ -301,6 +305,12 @@ const BoardView: React.FC<{
                 onCancel={() => setShowPostForm(false)}
               />
             )}
+          </div>
+        )}
+
+        {threadsError && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+            {threadsError}
           </div>
         )}
 

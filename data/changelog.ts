@@ -7,10 +7,38 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    "date": "Mar 22, 2026",
+    "title": "Update 2026-03-22",
+    "version": "build-20260322",
+    "changes": [
+      "[Backend] docs: rewrite readme in japanese",
+      "[Backend] chore: clarify startup bind log",
+      "[Backend] fix: return 503 when database is unavailable",
+      "[Backend] fix: resolve clippy lint issues"
+    ]
+  },
+  {
+    "date": "Mar 21, 2026",
+    "title": "Update 2026-03-21",
+    "version": "build-20260321",
+    "changes": [
+      "[Frontend] feat: add rustcc common link"
+    ]
+  },
+  {
+    "date": "Mar 19, 2026",
+    "title": "Update 2026-03-19",
+    "version": "build-20260319",
+    "changes": [
+      "[Frontend] fix: add standalone rate limited page"
+    ]
+  },
+  {
     "date": "Mar 16, 2026",
     "title": "Update 2026-03-16",
     "version": "build-20260316",
     "changes": [
+      "[Frontend] fix: use Japanese era dates in ja locale",
       "[Frontend] feat: make common links board thread-like",
       "[Frontend] feat: add common links board",
       "[Frontend] feat: expand service paused page",
@@ -214,9 +242,7 @@ export const changelogData: ChangelogEntry[] = [
       "[Frontend] chore(repo): initial frontend import",
       "[Backend] feat(api): add rate limiting middleware",
       "[Backend] fix(api): expand CORS allowed origins for local preview",
-      "[Backend] fix(db): schema-qualify queries and generate UUIDs in app",
-      "[Backend] feat(api): bind to PORT and allow vercel CORS",
-      "[Backend] chore(repo): initial backend import"
+      "[Backend] fix(db): schema-qualify queries and generate UUIDs in app"
     ]
   },
   {

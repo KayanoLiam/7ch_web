@@ -17,6 +17,7 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
   const { t } = useTranslation();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -35,6 +36,7 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
 
     // 组装请求体：根据模式选择线程/回复结构。
     // Build payload: choose thread or reply shape based on mode.
+    setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (isNewThread) {
@@ -64,6 +66,7 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
         window.location.assign(redirectPath);
         return;
       }
+      setSubmitError(err instanceof Error ? err.message : t('error.requestFailed'));
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -116,6 +119,12 @@ export const PostForm: React.FC<PostFormProps> = ({ boardId, threadId, onSubmit,
             onChange={(e) => setContent(e.target.value)}
           />
         </div>
+
+        {submitError && (
+          <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+            {submitError}
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 mt-2">
           {onCancel && (

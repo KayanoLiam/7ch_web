@@ -272,6 +272,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
   const navigate = useNavigate();
   const location = useLocation();
   const [data, setData] = useState<ThreadDetail | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
@@ -279,12 +280,14 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
     try {
       const res = await api.getThreadContent(threadId);
       setData(res);
+      setErrorMessage(null);
     } catch (e) {
       const redirectPath = buildKnownErrorRedirectPath(e, `${location.pathname}${location.search}`);
       if (redirectPath) {
         navigate(redirectPath);
         return;
       }
+      setErrorMessage(e instanceof Error ? e.message : t('error.requestFailed'));
       console.error(e);
     }
   };
@@ -333,10 +336,32 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
     }, 100);
   };
 
+  if (!data && errorMessage) {
+    return (
+      <div className="max-w-4xl mx-auto px-2 pb-20 sm:px-2">
+        <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+          <div>{errorMessage}</div>
+          <button
+            type="button"
+            onClick={() => void loadData()}
+            className="mt-3 rounded border border-red-300 bg-white px-4 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 dark:border-red-800 dark:bg-transparent dark:text-red-200 dark:hover:bg-red-950/50"
+          >
+            {t('servicePause.retry')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!data) return <div className="p-4 text-center text-gray-500 dark:text-gray-400">{t('meta.loading')}</div>;
 
   return (
     <div className="max-w-4xl mx-auto pb-20 px-0 sm:px-2">
+      {errorMessage && (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+          {errorMessage}
+        </div>
+      )}
       <div className="mb-4 border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:rounded-sm sm:shadow-sm">
         <div className="mb-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
           <button onClick={onBack} className="mr-2 text-[#0056b3] hover:underline dark:text-sky-300">

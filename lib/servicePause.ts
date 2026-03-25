@@ -1,22 +1,22 @@
 export const servicePausedRoute = '/service-paused';
 
-type ServicePauseKind = 'timeout' | 'network' | 'server' | 'invalid_response';
+type ServicePauseReason = 'database_unavailable' | 'forced';
 
 interface ServicePausedCandidateErrorOptions {
-  kind: ServicePauseKind;
+  reason: ServicePauseReason;
   path: string;
   status?: number;
 }
 
 export class ServicePausedCandidateError extends Error {
-  readonly kind: ServicePauseKind;
+  readonly reason: ServicePauseReason;
   readonly path: string;
   readonly status?: number;
 
   constructor(message: string, options: ServicePausedCandidateErrorOptions) {
     super(message);
     this.name = 'ServicePausedCandidateError';
-    this.kind = options.kind;
+    this.reason = options.reason;
     this.path = options.path;
     this.status = options.status;
   }

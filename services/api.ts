@@ -22,6 +22,11 @@ import { mockApi } from "./mockService";
 const REQUEST_TIMEOUT_MS = 9000;
 const forceServicePaused = ((import.meta.env.VITE_FORCE_SERVICE_PAUSED as string | undefined) ?? "false") === "true";
 
+interface ApiErrorBody {
+  error?: string;
+  message?: string;
+}
+
 const parseRetryAfterSeconds = (value: string | null) => {
   if (!value) return undefined;
 
@@ -39,13 +44,27 @@ const parseRetryAfterSeconds = (value: string | null) => {
   return deltaSeconds > 0 ? deltaSeconds : undefined;
 };
 
+const readApiErrorBody = async (res: Response): Promise<ApiErrorBody | null> => {
+  const contentType = res.headers.get('Content-Type') || '';
+  if (!contentType.toLowerCase().includes('application/json')) {
+    return null;
+  }
+
+  try {
+    const body = await res.json() as ApiErrorBody;
+    return body && typeof body === 'object' ? body : null;
+  } catch {
+    return null;
+  }
+};
+
 class RealService implements I7chAPI {
   constructor(private readonly baseUrl: string) { }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     if (forceServicePaused) {
       throw new ServicePausedCandidateError("Service paused (forced by VITE_FORCE_SERVICE_PAUSED)", {
-        kind: "server",
+        reason: "forced",
         path,
         status: 503,
       });
@@ -73,15 +92,9 @@ class RealService implements I7chAPI {
       });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
-        throw new ServicePausedCandidateError("Request timed out", {
-          kind: "timeout",
-          path,
-        });
+        throw new Error("Request timed out. Please try again.");
       }
-      throw new ServicePausedCandidateError("Network request failed", {
-        kind: "network",
-        path,
-      });
+      throw new Error("Unable to reach the server. Please check the backend and try again.");
     } finally {
       window.clearTimeout(timeoutId);
     }
@@ -89,16 +102,9 @@ class RealService implements I7chAPI {
     if (!res.ok) {
       let message = `Request failed: ${res.status} ${res.statusText}`;
       const retryAfterSeconds = parseRetryAfterSeconds(res.headers.get("Retry-After"));
-      const contentType = res.headers.get("Content-Type") || "";
-      if (contentType.toLowerCase().includes("application/json")) {
-        try {
-          const body = await res.json() as { message?: string };
-          if (body.message && body.message.trim().length > 0) {
-            message = body.message;
-          }
-        } catch {
-          // Keep fallback message when body is not valid JSON.
-        }
+      const errorBody = await readApiErrorBody(res);
+      if (errorBody?.message && errorBody.message.trim().length > 0) {
+        message = errorBody.message;
       }
       if (res.status === 429) {
         throw new RateLimitedError(message, {
@@ -107,9 +113,9 @@ class RealService implements I7chAPI {
           retryAfterSeconds,
         });
       }
-      if (res.status >= 500) {
+      if (res.status === 503 && errorBody?.error === 'database_unavailable') {
         throw new ServicePausedCandidateError(message, {
-          kind: "server",
+          reason: 'database_unavailable',
           path,
           status: res.status,
         });
@@ -120,11 +126,7 @@ class RealService implements I7chAPI {
     try {
       return await res.json() as T;
     } catch {
-      throw new ServicePausedCandidateError("Received invalid server response", {
-        kind: "invalid_response",
-        path,
-        status: res.status,
-      });
+      throw new Error("Received invalid server response.");
     }
   }
 
