@@ -17,6 +17,36 @@ export interface Post {
   isOp: boolean; // 是否楼主 / Is this the thread starter?
 }
 
+export type TransportationCovered = 'yes' | 'partial' | 'no';
+export type YesNo = 'yes' | 'no';
+export type YesNoUnknown = 'yes' | 'no' | 'unknown';
+export type JapaneseRequirement = 'n1' | 'n2' | 'n3' | 'simple_conversation' | 'unrestricted';
+export type ContactType = 'phone' | 'email' | 'line' | 'wechat' | 'url' | 'other';
+
+export interface JobMeta {
+  region: string;
+  nearestStation: string;
+  hourlyWageMinJpy: number;
+  hourlyWageMaxJpy?: number;
+  hourlyWageNote?: string;
+  monthlyWageMinJpy: number;
+  monthlyWageMaxJpy?: number;
+  monthlyWageNote?: string;
+  transportationCovered: TransportationCovered;
+  internationalStudentsAccepted: YesNo;
+  noExperienceAccepted: YesNo;
+  japaneseRequirement: JapaneseRequirement;
+  visaRequirement: string;
+  shiftStyle: string;
+  housingProvided: YesNo;
+  housingSubsidy: string;
+  hasChineseStaff: YesNoUnknown;
+  businessType: string;
+  companySize: string;
+  contactType: ContactType;
+  contactValue: string;
+}
+
 export interface Thread {
   id: string;
   boardId: string;
@@ -25,6 +55,7 @@ export interface Thread {
   viewCount: number; // 浏览量 / View count
   updatedAt: string; // 排序依据（被顶时间）/ For sorting (bump)
   createdAt: string;
+  jobMeta?: JobMeta;
   opPost: Post; // OP 预览 / Preview of the first post
 }  
 
@@ -39,6 +70,7 @@ export interface CreateThreadRequest {
   name?: string;
   email?: string; // sage 判定 / For sage
   content: string;
+  jobMeta?: JobMeta;
 }
 
 export interface CreatePostRequest {

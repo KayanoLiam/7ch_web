@@ -7,6 +7,32 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    "date": "Mar 31, 2026",
+    "title": "Update 2026-03-31",
+    "version": "build-20260331",
+    "changes": [
+      "[Frontend] fix: align frontend api fallback and docs",
+      "[Backend] docs: sync readme with current backend behavior"
+    ]
+  },
+  {
+    "date": "Mar 30, 2026",
+    "title": "Update 2026-03-30",
+    "version": "build-20260330",
+    "changes": [
+      "[Backend] 增加跨域域名"
+    ]
+  },
+  {
+    "date": "Mar 29, 2026",
+    "title": "Update 2026-03-29",
+    "version": "build-20260329",
+    "changes": [
+      "[Frontend] Harden frontend navigation and subscription links",
+      "[Backend] Harden backend subscription converter"
+    ]
+  },
+  {
     "date": "Mar 28, 2026",
     "title": "Update 2026-03-28",
     "version": "build-20260328",
@@ -213,8 +239,7 @@ export const changelogData: ChangelogEntry[] = [
       "[Frontend] Update i18n, PrivacyPolicy and Terms",
       "[Frontend] Update i18n and Docs",
       "[Frontend] Update README",
-      "[Frontend] Update App.tsx",
-      "[Backend] Add README"
+      "[Frontend] Update App.tsx"
     ]
   },
   {
@@ -222,9 +247,7 @@ export const changelogData: ChangelogEntry[] = [
     "title": "Update 2026-02-02",
     "version": "build-20260202",
     "changes": [
-      "[Frontend] feat: 实现混合分页功能",
-      "[Backend] feat: implement profanity filter and update configuration",
-      "[Backend] feat: API添加分页支持"
+      "[Frontend] feat: 实现混合分页功能"
     ]
   },
   {
@@ -249,9 +272,7 @@ export const changelogData: ChangelogEntry[] = [
     "changes": [
       "[Frontend] Update App.tsx and index.html",
       "[Frontend] Update vercel.json",
-      "[Frontend] Update frontend: modify App.tsx, ThreadDetail.tsx and add vercel.json",
-      "[Frontend] Update frontend components",
-      "[Frontend] Update frontend: add DonateModal component and dialog UI"
+      "[Frontend] Update frontend: modify App.tsx, ThreadDetail.tsx and add vercel.json"
     ]
   }
 ];

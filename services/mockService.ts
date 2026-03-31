@@ -12,6 +12,7 @@ import {
   SubscriptionConvertRequest,
   SubscriptionConvertResponse,
 } from '../types';
+import { isBaitoBoard } from '../lib/jobMeta';
 import { assertPublicSubscriptionSourceUrl, maskSubscriptionUrlForDisplay } from '../lib/subscriptionUrl';
 
 // 本地 Mock：使用 LocalStorage 模拟后端 API 行为，便于无后端开发/演示。
@@ -58,6 +59,7 @@ const INITIAL_BOARDS: Board[] = [
   { id: 'g', name: 'board.g.name', description: 'board.g.desc' },
   { id: 'acg', name: 'board.acg.name', description: 'board.acg.desc' },
   { id: 'vip', name: 'board.vip.name', description: 'board.vip.desc' },
+  { id: 'baito', name: 'board.baito.name', description: 'board.baito.desc' },
 ];
 
 interface DBSchema {
@@ -117,6 +119,53 @@ export class MockService implements I7chAPI {
 
     this.db.threads.push(thread);
     this.db.posts[threadId] = [opPost];
+
+    const baitoThreadId = 'baito-thread-' + (Date.now() + 1);
+    const baitoNow = new Date().toISOString();
+    const baitoOpPost: Post = {
+      id: 1,
+      threadId: baitoThreadId,
+      name: 'Anonymous',
+      content: '新宿站附近招晚班服务员。店里有中文员工，排班相对灵活，细节见招聘信息。',
+      createdAt: baitoNow,
+      uid: generateDailyId('baito'),
+      isOp: true
+    };
+    const baitoThread: Thread = {
+      id: baitoThreadId,
+      boardId: 'baito',
+      title: '新宿居酒屋晚班ホールスタッフ募集',
+      postCount: 1,
+      viewCount: 0,
+      createdAt: baitoNow,
+      updatedAt: baitoNow,
+      jobMeta: {
+        region: '东京',
+        nearestStation: '新宿站',
+        hourlyWageMinJpy: 1300,
+        hourlyWageMaxJpy: 1500,
+        hourlyWageNote: '周末加给',
+        monthlyWageMinJpy: 220000,
+        monthlyWageMaxJpy: 260000,
+        transportationCovered: 'partial',
+        internationalStudentsAccepted: 'yes',
+        noExperienceAccepted: 'yes',
+        japaneseRequirement: 'n3',
+        visaRequirement: '持有资格外活动许可者可',
+        shiftStyle: '每周 3 天起，晚班优先',
+        housingProvided: 'no',
+        housingSubsidy: '月补贴 20000 日元',
+        hasChineseStaff: 'yes',
+        businessType: '居酒屋',
+        companySize: '连锁约 20 店',
+        contactType: 'line',
+        contactValue: 'line://7ch-baito-demo',
+      },
+      opPost: baitoOpPost,
+    };
+
+    this.db.threads.push(baitoThread);
+    this.db.posts[baitoThreadId] = [baitoOpPost];
     this.save();
   }
 
@@ -182,6 +231,12 @@ export class MockService implements I7chAPI {
 
   async createThread(payload: CreateThreadRequest): Promise<string> {
     await this.delay();
+    if (isBaitoBoard(payload.boardId) && !payload.jobMeta) {
+      throw new Error('jobMeta is required for baito board');
+    }
+    if (!isBaitoBoard(payload.boardId) && payload.jobMeta) {
+      throw new Error('jobMeta is only allowed for baito board');
+    }
     const threadId = crypto.randomUUID();
     const now = new Date().toISOString();
 
@@ -218,6 +273,7 @@ export class MockService implements I7chAPI {
       viewCount: 0,
       createdAt: now,
       updatedAt: now,
+      jobMeta: payload.jobMeta,
       opPost: post
     };
 

@@ -6,6 +6,7 @@ import { buildKnownErrorRedirectPath } from '../lib/errorRedirect';
 import { getDisplayErrorMessage } from '../lib/errorMessage';
 import { api } from '../services/api';
 import { ThreadDetail, Post } from '../types';
+import { JobMetaPanel } from './JobMetaPanel';
 import { PostContent } from './PostContent';
 import { PostForm } from './PostForm';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
@@ -77,6 +78,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showContactValue, setShowContactValue] = useState(false);
 
   const loadData = async () => {
     try {
@@ -107,6 +109,10 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
     if (refreshToken === 0) return;
     loadData();
   }, [refreshToken]);
+
+  useEffect(() => {
+    setShowContactValue(false);
+  }, [threadId, data?.jobMeta?.contactValue]);
 
   const handleReplySubmit = async (payload: any) => {
     // 回复成功后刷新内容，并触发滚动到底部。
@@ -185,6 +191,13 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
           </button>
         </div>
       </div>
+      {data.jobMeta && (
+        <JobMetaPanel
+          jobMeta={data.jobMeta}
+          showContactValue={showContactValue}
+          onToggleContactValue={() => setShowContactValue((prev) => !prev)}
+        />
+      )}
       <div className="space-y-0 sm:space-y-4">
         {data.posts.map(post => (
           <SinglePost
@@ -207,7 +220,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
               </button>
             </DialogTrigger>
           </div>
-          <DialogContent className="max-w-4xl w-[95vw] p-0 border-none bg-transparent shadow-none [&>button]:hidden">
+          <DialogContent className="max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto border-none bg-transparent p-0 shadow-none [&>button]:hidden">
             <PostForm
               key={formKey}
               threadId={threadId}

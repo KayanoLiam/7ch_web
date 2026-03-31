@@ -5,6 +5,7 @@ import { useNavigate, useParams, Route, Routes, Link, useLocation } from 'react-
 import { api, apiBaseUrl, useMock as isMockMode } from './services/api';
 import { Board, Thread } from './types';
 import { PostForm } from './components/PostForm';
+import { JobMetaSummary } from './components/JobMetaSummary';
 import { ThreadView } from './components/ThreadDetail';
 import { Button } from './components/ui/button';
 import { DonateModal } from './components/DonateModal';
@@ -36,6 +37,7 @@ import { CommonLinksBoard, CommonLinkDetail } from './pages/CommonLinks';
 import { buildKnownErrorRedirectPath } from './lib/errorRedirect';
 import { getDisplayErrorMessage } from './lib/errorMessage';
 import { commonLinksBoard } from './data/commonLinks';
+import { buildJobMetaSearchText } from './lib/jobMeta';
 
 // 应用入口：路由、全局状态、SSE 通知、以及主要布局。
 // App entry: routing, global state, SSE notices, and overall layout.
@@ -241,6 +243,7 @@ const BoardView: React.FC<{
             className="mb-3 cursor-pointer text-sm leading-relaxed text-[#333] dark:text-gray-200"
             onClick={() => onThreadClick(thread)}
           >
+            {thread.jobMeta && <JobMetaSummary jobMeta={thread.jobMeta} />}
             {thread.opPost.content.length > 200 ? thread.opPost.content.substring(0, 200) + '...' : thread.opPost.content}
           </div>
           <div className="mb-3">
@@ -274,7 +277,7 @@ const BoardView: React.FC<{
   // Client-side filter when search term exists (title + OP content).
   const filteredThreads = search.trim() ? threads.filter((thread) => {
     const s = search.trim().toLowerCase();
-    const text = `${thread.title} ${thread.opPost.content}`.toLowerCase();
+    const text = `${thread.title} ${thread.opPost.content} ${buildJobMetaSearchText(thread.jobMeta)}`.toLowerCase();
     return text.includes(s);
   }) : threads;
 
@@ -347,7 +350,7 @@ const BoardView: React.FC<{
                       {t('thread.new')}
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl w-[95vw] p-0 border-none bg-transparent shadow-none [&>button]:hidden">
+                  <DialogContent className="max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto border-none bg-transparent p-0 shadow-none [&>button]:hidden">
                     <PostForm
                       boardId={boardId!}
                       onSubmit={async (payload: any) => {
@@ -511,6 +514,7 @@ const FavoritesView: React.FC<{
             className="mb-3 cursor-pointer text-sm leading-relaxed text-[#333] dark:text-gray-200"
             onClick={() => onThreadClick(thread)}
           >
+            {thread.jobMeta && <JobMetaSummary jobMeta={thread.jobMeta} />}
             {thread.opPost.content.length > 200 ? thread.opPost.content.substring(0, 200) + '...' : thread.opPost.content}
           </div>
           <div className="mb-3">
@@ -776,13 +780,14 @@ const App: React.FC = () => {
         return;
       }
       setBoardsError(getDisplayErrorMessage(e, t));
-      setBoards(mergeBoardsWithStatic([
-        { id: 'all', name: 'board.all.name', description: 'board.all.desc' },
-        { id: 'news', name: 'board.news.name', description: 'board.news.desc' },
-        { id: 'g', name: 'board.g.name', description: 'board.g.desc' },
-        { id: 'acg', name: 'board.acg.name', description: 'board.acg.desc' },
-        { id: 'vip', name: 'board.vip.name', description: 'board.vip.desc' },
-      ]));
+        setBoards(mergeBoardsWithStatic([
+          { id: 'all', name: 'board.all.name', description: 'board.all.desc' },
+          { id: 'news', name: 'board.news.name', description: 'board.news.desc' },
+          { id: 'g', name: 'board.g.name', description: 'board.g.desc' },
+          { id: 'acg', name: 'board.acg.name', description: 'board.acg.desc' },
+          { id: 'vip', name: 'board.vip.name', description: 'board.vip.desc' },
+          { id: 'baito', name: 'board.baito.name', description: 'board.baito.desc' },
+        ]));
     }
   };
 
