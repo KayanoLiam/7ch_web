@@ -91,13 +91,15 @@ npm run dev
 
 ### 3. 构建与预览
 
-```
+``` 
 npm run build
+npm run build:with-changelog
 npm run preview
 ```
 
 补充说明：
-- `npm run build` 会先执行 `npm run update-changelog`，生成/刷新 `data/changelog.ts` 后再进入 Vite 构建。
+- `npm run build` 只执行 Vite 构建，不再改写 `data/changelog.ts`。
+- 如需刷新更新日志页面数据，再手动执行 `npm run update-changelog`，或使用 `npm run build:with-changelog`。
 
 ---
 

@@ -91,6 +91,10 @@ const BoardView: React.FC<{
   // IntersectionObserver + sentinel for infinite scroll.
   const loadMoreRef = React.useRef<HTMLDivElement>(null);
   const observerRef = React.useRef<IntersectionObserver | null>(null);
+  const currentBoardRef = React.useRef<string | undefined>(boardId);
+  const loadGenerationRef = React.useRef(0);
+  const inFlightPagesRef = React.useRef<Set<number>>(new Set());
+  const loadedPagesRef = React.useRef<Set<number>>(new Set());
 
   // 初始化/窗口变化时检测设备。
   // Detect device on mount and resize.
@@ -103,24 +107,69 @@ const BoardView: React.FC<{
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    currentBoardRef.current = boardId;
+  }, [boardId]);
+
+  const syncLoadingState = () => {
+    setLoading(inFlightPagesRef.current.size > 0);
+  };
+
+  const resetThreadLoadState = () => {
+    loadGenerationRef.current += 1;
+    inFlightPagesRef.current.clear();
+    loadedPagesRef.current.clear();
+    syncLoadingState();
+  };
+
+  const mergeUniqueThreads = (previousThreads: Thread[], nextThreads: Thread[]) => {
+    const seen = new Set(previousThreads.map((thread) => thread.id));
+    const merged = [...previousThreads];
+    for (const thread of nextThreads) {
+      if (seen.has(thread.id)) continue;
+      seen.add(thread.id);
+      merged.push(thread);
+    }
+    return merged;
+  };
+
   // 拉取线程列表：支持覆盖或追加。
   // Fetch threads: replace or append.
   const loadThreads = async (page: number, append: boolean = false) => {
-    if (loading || !boardId) return;
-    setLoading(true);
+    const requestBoardId = boardId;
+    if (!requestBoardId) return;
+    if (append && loadedPagesRef.current.has(page)) return;
+    if (inFlightPagesRef.current.has(page)) return;
+
+    const generation = loadGenerationRef.current;
+    inFlightPagesRef.current.add(page);
+    syncLoadingState();
     setThreadsError(null);
 
     try {
-      const data = await api.getThreads(boardId, page);
+      const data = await api.getThreads(requestBoardId, page);
+      if (generation !== loadGenerationRef.current || currentBoardRef.current !== requestBoardId) {
+        return;
+      }
+
       if (append) {
-        setThreads(prev => [...prev, ...data.threads]);
+        loadedPagesRef.current.add(page);
+        setThreads(prev => mergeUniqueThreads(prev, data.threads));
       } else {
+        loadedPagesRef.current = new Set([page]);
         setThreads(data.threads);
+      }
+
+      if (append) {
+        setCurrentPage((current) => Math.max(current, page));
       }
       setTotal(data.total);
       setTotalPages(data.totalPages);
       setHasMore(page < data.totalPages);
     } catch (error) {
+      if (generation !== loadGenerationRef.current || currentBoardRef.current !== requestBoardId) {
+        return;
+      }
       const redirectPath = buildKnownErrorRedirectPath(error, `${location.pathname}${location.search}`);
       if (redirectPath) {
         navigate(redirectPath);
@@ -129,7 +178,10 @@ const BoardView: React.FC<{
       setThreadsError(getDisplayErrorMessage(error, t));
       console.error('Failed to load threads:', error);
     } finally {
-      setLoading(false);
+      inFlightPagesRef.current.delete(page);
+      if (generation === loadGenerationRef.current && currentBoardRef.current === requestBoardId) {
+        syncLoadingState();
+      }
     }
   };
 
@@ -137,6 +189,7 @@ const BoardView: React.FC<{
   // Reload on first mount or board switch.
   useEffect(() => {
     if (boardId) {
+      resetThreadLoadState();
       setThreads([]);
       setThreadsError(null);
       setCurrentPage(1);
@@ -148,6 +201,7 @@ const BoardView: React.FC<{
 
   useEffect(() => {
     if (!boardId || refreshToken === 0) return;
+    resetThreadLoadState();
     setThreads([]);
     setCurrentPage(1);
     setHasMore(true);
@@ -165,15 +219,14 @@ const BoardView: React.FC<{
   // 移动端：观察触底并追加下一页。
   // Mobile: observe sentinel and append next page.
   useEffect(() => {
-    if (!isMobile || !hasMore || loading) return;
+    if (!isMobile || !hasMore) return;
 
     if (observerRef.current) observerRef.current.disconnect();
 
     observerRef.current = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
+        if (entries[0].isIntersecting && hasMore) {
           const nextPage = currentPage + 1;
-          setCurrentPage(nextPage);
           loadThreads(nextPage, true);
         }
       },
