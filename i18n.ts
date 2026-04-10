@@ -228,7 +228,7 @@ const resources = {
                   "theme.variant.title": "风格",
                   "theme.variant.classic": "原版",
                   "theme.variant.claude": "Claude",
-                  "theme.variant.scheme1": "チャコールピンク",
+                  "theme.variant.scheme1": "炭粉",
 
                   // Footer
                   "footer.privacy": "隐私政策",
@@ -797,7 +797,7 @@ A: 互联网不是法外之地。虽然本站承诺不建立用户画像，但�
                   "theme.variant.title": "スタイル",
                   "theme.variant.classic": "従来",
                   "theme.variant.claude": "Claude",
-                  "theme.variant.scheme1": "炭粉",
+                  "theme.variant.scheme1": "チャコピンク",
 
                   // Footer
                   "footer.privacy": "プライバシーポリシー",

@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 import { useNavigate, useParams, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { api, apiBaseUrl, useMock as isMockMode } from './services/api';
 import { Board, Thread } from './types';
-import { PostForm } from './components/PostForm';
 import { JobMetaSummary } from './components/JobMetaSummary';
-import { ThreadView } from './components/ThreadDetail';
 import { Button } from './components/ui/button';
 import { DonateModal } from './components/DonateModal';
 import { Pagination } from './components/Pagination';
@@ -26,16 +24,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogTrigger } from './components/ui/dialog';
-import { Docs } from './pages/Docs';
-import { PrivacyPolicy } from './pages/PrivacyPolicy';
-import { Terms } from './pages/Terms';
-import { Help } from './pages/Help';
-import { QA } from './pages/QA';
-import { Changelog } from './pages/Changelog';
-import { RateLimited } from './pages/RateLimited';
-import { ServicePaused } from './pages/ServicePaused';
-import { SubscriptionConvert } from './pages/SubscriptionConvert';
-import { CommonLinksBoard, CommonLinkDetail } from './pages/CommonLinks';
 import { buildKnownErrorRedirectPath } from './lib/errorRedirect';
 import { getDisplayErrorMessage } from './lib/errorMessage';
 import { commonLinksBoard } from './data/commonLinks';
@@ -64,6 +52,64 @@ const mergeBoardsWithStatic = (sourceBoards: Board[]) => {
     seen.add(board.id);
     return true;
   });
+};
+
+const DocsPage = lazy(() =>
+  import('./pages/Docs').then((module) => ({ default: module.Docs }))
+);
+const PrivacyPolicyPage = lazy(() =>
+  import('./pages/PrivacyPolicy').then((module) => ({ default: module.PrivacyPolicy }))
+);
+const TermsPage = lazy(() =>
+  import('./pages/Terms').then((module) => ({ default: module.Terms }))
+);
+const HelpPage = lazy(() =>
+  import('./pages/Help').then((module) => ({ default: module.Help }))
+);
+const QAPage = lazy(() =>
+  import('./pages/QA').then((module) => ({ default: module.QA }))
+);
+const ChangelogPage = lazy(() =>
+  import('./pages/Changelog').then((module) => ({ default: module.Changelog }))
+);
+const RateLimitedPage = lazy(() =>
+  import('./pages/RateLimited').then((module) => ({ default: module.RateLimited }))
+);
+const ServicePausedPage = lazy(() =>
+  import('./pages/ServicePaused').then((module) => ({ default: module.ServicePaused }))
+);
+const SubscriptionConvertPage = lazy(() =>
+  import('./pages/SubscriptionConvert').then((module) => ({ default: module.SubscriptionConvert }))
+);
+const CommonLinksBoardPage = lazy(() =>
+  import('./pages/CommonLinks').then((module) => ({ default: module.CommonLinksBoard }))
+);
+const CommonLinkDetailPage = lazy(() =>
+  import('./pages/CommonLinks').then((module) => ({ default: module.CommonLinkDetail }))
+);
+const ThreadViewPage = lazy(() =>
+  import('./components/ThreadDetail').then((module) => ({ default: module.ThreadView }))
+);
+const PostFormPage = lazy(() =>
+  import('./components/PostForm').then((module) => ({ default: module.PostForm }))
+);
+
+const RouteLoadingFallback: React.FC = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="themed-page min-h-[calc(100vh-3.5rem)]">
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="themed-card themed-card-featured p-6 text-center themed-meta">
+          {t('meta.loading')}...
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LazyRouteBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <Suspense fallback={<RouteLoadingFallback />}>{children}</Suspense>;
 };
 
 // --- Board View Component ---
@@ -434,21 +480,23 @@ const BoardView: React.FC<{
                     </button>
                   </DialogTrigger>
                   <DialogContent className="max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto border-none bg-transparent p-0 shadow-none [&>button]:hidden">
-                    <PostForm
-                      boardId={boardId!}
-                      onSubmit={async (payload: any) => {
-                        const newId = await api.createThread(payload);
-                        const data = await api.getThreads(boardId!, 1);
-                        setThreads(data.threads);
-                        setTotal(data.total);
-                        setTotalPages(data.totalPages);
-                        setCurrentPage(1);
-                        const newThread = data.threads.find(t => t.id === newId);
-                        if (newThread) onThreadClick(newThread);
-                        setShowPostForm(false);
-                      }}
-                      onCancel={() => setShowPostForm(false)}
-                    />
+                    <LazyRouteBoundary>
+                      <PostFormPage
+                        boardId={boardId!}
+                        onSubmit={async (payload: any) => {
+                          const newId = await api.createThread(payload);
+                          const data = await api.getThreads(boardId!, 1);
+                          setThreads(data.threads);
+                          setTotal(data.total);
+                          setTotalPages(data.totalPages);
+                          setCurrentPage(1);
+                          const newThread = data.threads.find(t => t.id === newId);
+                          if (newThread) onThreadClick(newThread);
+                          setShowPostForm(false);
+                        }}
+                        onCancel={() => setShowPostForm(false)}
+                      />
+                    </LazyRouteBoundary>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -683,14 +731,16 @@ const ThreadViewWrapper: React.FC<{
 
   return (
     <div className="themed-page min-h-[calc(100vh-3.5rem)] pt-4">
-      <ThreadView
-        threadId={threadId}
-        onBack={() => navigate(`/board/${boardId}`)}
-        isFollowed={followedThreads.has(threadId)}
-        onToggleFollow={(e) => onToggleFollow(e, threadId)}
-        refreshToken={refreshToken}
-        enablePolling={enablePolling}
-      />
+      <LazyRouteBoundary>
+        <ThreadViewPage
+          threadId={threadId}
+          onBack={() => navigate(`/board/${boardId}`)}
+          isFollowed={followedThreads.has(threadId)}
+          onToggleFollow={(e) => onToggleFollow(e, threadId)}
+          refreshToken={refreshToken}
+          enablePolling={enablePolling}
+        />
+      </LazyRouteBoundary>
     </div>
   );
 };
@@ -1293,8 +1343,16 @@ const App: React.FC = () => {
             </div>
           } />
 
-          <Route path="/board/links" element={<CommonLinksBoard search={search} onBack={() => navigate('/')} />} />
-          <Route path="/board/links/thread/:linkId" element={<CommonLinkDetail onBack={() => navigate('/board/links')} />} />
+          <Route path="/board/links" element={
+            <LazyRouteBoundary>
+              <CommonLinksBoardPage search={search} onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/board/links/thread/:linkId" element={
+            <LazyRouteBoundary>
+              <CommonLinkDetailPage onBack={() => navigate('/board/links')} />
+            </LazyRouteBoundary>
+          } />
 
           {/* 看板详情页 */}
           <Route path="/board/:boardId" element={
@@ -1336,15 +1394,51 @@ const App: React.FC = () => {
           } />
 
           {/* 文档页面 */}
-          <Route path="/service-paused" element={<ServicePaused onOpenDonate={() => setShowDonateModal(true)} />} />
-          <Route path="/rate-limited" element={<RateLimited />} />
-          <Route path="/docs" element={<Docs onBack={() => navigate('/')} />} />
-          <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
-          <Route path="/terms" element={<Terms onBack={() => navigate('/')} />} />
-          <Route path="/help" element={<Help onBack={() => navigate('/')} />} />
-          <Route path="/QA" element={<QA onBack={() => navigate('/')} />} />
-          <Route path="/changelog" element={<Changelog onBack={() => navigate('/')} />} />
-          <Route path="/tools/convert" element={<SubscriptionConvert onBack={() => navigate('/')} />} />
+          <Route path="/service-paused" element={
+            <LazyRouteBoundary>
+              <ServicePausedPage onOpenDonate={() => setShowDonateModal(true)} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/rate-limited" element={
+            <LazyRouteBoundary>
+              <RateLimitedPage />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/docs" element={
+            <LazyRouteBoundary>
+              <DocsPage onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/privacy" element={
+            <LazyRouteBoundary>
+              <PrivacyPolicyPage onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/terms" element={
+            <LazyRouteBoundary>
+              <TermsPage onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/help" element={
+            <LazyRouteBoundary>
+              <HelpPage onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/QA" element={
+            <LazyRouteBoundary>
+              <QAPage onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/changelog" element={
+            <LazyRouteBoundary>
+              <ChangelogPage onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
+          <Route path="/tools/convert" element={
+            <LazyRouteBoundary>
+              <SubscriptionConvertPage onBack={() => navigate('/')} />
+            </LazyRouteBoundary>
+          } />
         </Routes>
       </main>
       {location.pathname !== '/service-paused' && location.pathname !== '/rate-limited' && renderFooter()}

@@ -2,7 +2,18 @@ import React, { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import jsx from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
+import rust from 'react-syntax-highlighter/dist/esm/languages/prism/rust';
+import java from 'react-syntax-highlighter/dist/esm/languages/prism/java';
+import sql from 'react-syntax-highlighter/dist/esm/languages/prism/sql';
+import css from 'react-syntax-highlighter/dist/esm/languages/prism/css';
+import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { cn } from '../lib/utils';
@@ -11,6 +22,52 @@ import { useTheme } from './theme-provider';
 
 const QUOTE_PROTOCOL = 'quote://';
 const quoteTokenPattern = />>(\d{1,7})/g;
+
+const registeredSyntaxHighlighter = SyntaxHighlighter as typeof SyntaxHighlighter & {
+  registerLanguage: (name: string, language: unknown) => void;
+};
+
+registeredSyntaxHighlighter.registerLanguage('javascript', javascript);
+registeredSyntaxHighlighter.registerLanguage('js', javascript);
+registeredSyntaxHighlighter.registerLanguage('jsx', jsx);
+registeredSyntaxHighlighter.registerLanguage('typescript', typescript);
+registeredSyntaxHighlighter.registerLanguage('ts', typescript);
+registeredSyntaxHighlighter.registerLanguage('tsx', tsx);
+registeredSyntaxHighlighter.registerLanguage('json', json);
+registeredSyntaxHighlighter.registerLanguage('bash', bash);
+registeredSyntaxHighlighter.registerLanguage('sh', bash);
+registeredSyntaxHighlighter.registerLanguage('shell', bash);
+registeredSyntaxHighlighter.registerLanguage('zsh', bash);
+registeredSyntaxHighlighter.registerLanguage('rust', rust);
+registeredSyntaxHighlighter.registerLanguage('rs', rust);
+registeredSyntaxHighlighter.registerLanguage('java', java);
+registeredSyntaxHighlighter.registerLanguage('sql', sql);
+registeredSyntaxHighlighter.registerLanguage('css', css);
+registeredSyntaxHighlighter.registerLanguage('html', markup);
+registeredSyntaxHighlighter.registerLanguage('xml', markup);
+registeredSyntaxHighlighter.registerLanguage('markup', markup);
+
+const SUPPORTED_CODE_LANGUAGES = new Set([
+  'javascript',
+  'js',
+  'jsx',
+  'typescript',
+  'ts',
+  'tsx',
+  'json',
+  'bash',
+  'sh',
+  'shell',
+  'zsh',
+  'rust',
+  'rs',
+  'java',
+  'sql',
+  'css',
+  'html',
+  'xml',
+  'markup',
+]);
 
 const parseQuoteId = (href?: string): number | null => {
   if (!href?.startsWith(QUOTE_PROTOCOL)) return null;
@@ -178,11 +235,22 @@ export const PostContent: React.FC<PostContentProps> = ({
 
             const match = /language-([a-zA-Z0-9_-]+)/.exec(codeClassName || '');
             const code = String(children).replace(/\n$/, '');
+            const language = match?.[1]?.toLowerCase();
+
+            if (!language || !SUPPORTED_CODE_LANGUAGES.has(language)) {
+              return (
+                <pre
+                  className="overflow-x-auto rounded-md border border-gray-200 bg-slate-50 p-3 font-mono text-[0.85rem] dark:border-gray-700 dark:bg-gray-900"
+                >
+                  <code {...props}>{code}</code>
+                </pre>
+              );
+            }
 
             return (
               <SyntaxHighlighter
                 style={isDark ? oneDark : oneLight}
-                language={match?.[1] ?? 'text'}
+                language={language}
                 PreTag="div"
                 customStyle={{
                   margin: 0,
