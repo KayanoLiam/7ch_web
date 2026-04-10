@@ -10,6 +10,8 @@ import { JobMetaPanel } from './JobMetaPanel';
 import { PostContent } from './PostContent';
 import { PostForm } from './PostForm';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { useTheme } from './theme-provider';
+import { cn } from '../lib/utils';
 
 // 线程详情：展示 OP + 全部回复、引用预览、以及回复表单。
 // Thread detail: renders OP + replies, quote previews, and reply form.
@@ -17,6 +19,8 @@ import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 // --- Single Post Component ---
 const SinglePost: React.FC<{ post: Post, allPosts: Post[], onReply: (id: number) => void }> = ({ post, allPosts, onReply }) => {
   const { t, i18n } = useTranslation();
+  const { themeVariant } = useTheme();
+  const isClaude = themeVariant === 'claude';
   const d = new Date(post.createdAt);
 
   // 根据语言格式化时间（中/日两种风格）。
@@ -40,17 +44,17 @@ const SinglePost: React.FC<{ post: Post, allPosts: Post[], onReply: (id: number)
   const displayName = post.name === 'Anonymous' ? t('meta.anonymous') : post.name;
 
   return (
-    <div className="mb-3 border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:rounded-sm sm:border sm:shadow-sm" id={`p${post.id}`}>
-      <div className="mb-3 flex flex-wrap items-baseline gap-2 text-sm text-gray-600 dark:text-gray-400">
-        <span className="font-bold text-black dark:text-gray-100">{post.id}</span>
-        <span className="font-bold text-[#333] dark:text-gray-100">
+    <div className="themed-card mb-3 p-4 sm:p-5" id={`p${post.id}`}>
+      <div className="themed-meta mb-3 flex flex-wrap items-baseline gap-2 text-sm">
+        <span className="font-bold text-foreground">{post.id}</span>
+        <span className={cn('font-bold text-foreground', isClaude && 'font-serif font-medium')}>
           {displayName}
           {post.tripcode && <span className="ml-1 font-normal text-[#117743] dark:text-emerald-300">{post.tripcode}</span>}
         </span>
         <span className="text-xs">{dateStr}</span>
         <span className="text-xs">ID:{post.uid}</span>
         <div className="ml-auto text-xs flex gap-2">
-          <button onClick={() => onReply(post.id)} className="text-[#0056b3] hover:underline dark:text-sky-300">[Reply]</button>
+          <button onClick={() => onReply(post.id)} className="themed-inline-action">[Reply]</button>
         </div>
       </div>
       <div className="pl-0 sm:pl-2">
@@ -72,6 +76,8 @@ interface ThreadViewProps {
 
 export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFollowed, onToggleFollow, refreshToken, enablePolling }) => {
   const { t } = useTranslation();
+  const { themeVariant } = useTheme();
+  const isClaude = themeVariant === 'claude';
   const navigate = useNavigate();
   const location = useLocation();
   const [data, setData] = useState<ThreadDetail | null>(null);
@@ -168,15 +174,15 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
           className="mb-4"
         />
       )}
-      <div className="mb-4 border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:rounded-sm sm:shadow-sm">
-        <div className="mb-2 flex items-center text-xs text-gray-500 dark:text-gray-400">
-          <button onClick={onBack} className="mr-2 text-[#0056b3] hover:underline dark:text-sky-300">
+      <div className="themed-card themed-card-featured mb-4 p-4 sm:p-6">
+        <div className="themed-meta mb-2 flex items-center text-xs">
+          <button onClick={onBack} className="themed-inline-action mr-2">
             &lt; {t('nav.boards')}
           </button>
           <span>/ {data.boardId} /</span>
         </div>
-        <h1 className="mb-2 text-xl font-bold text-[#333] dark:text-gray-100 md:text-2xl">{data.title}</h1>
-        <div className="mt-2 flex items-center gap-4 text-xs font-bold text-gray-500 dark:text-gray-400">
+        <h1 className={cn('themed-heading mb-2 text-xl md:text-2xl', isClaude && 'md:text-[2.15rem]')}>{data.title}</h1>
+        <div className="themed-meta mt-2 flex items-center gap-4 text-xs font-bold">
           <span className="flex items-center gap-1 text-[#d32f2f]">
             <span>💬</span> {data.postCount}
           </span>
@@ -185,7 +191,10 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
           </span>
           <button
             onClick={onToggleFollow}
-            className={`px-3 py-0.5 rounded text-xs transition-colors border ${isFollowed ? 'bg-white text-[#2da0b3] border-[#2da0b3]' : 'bg-[#2da0b3] text-white border-[#2da0b3] hover:bg-[#238a9b]'}`}
+            className={cn(
+              'ml-auto rounded-xl px-3 py-1 text-xs transition-colors',
+              isFollowed ? 'themed-secondary-action' : 'themed-primary-action'
+            )}
           >
             {isFollowed ? t('meta.following') : t('meta.follow')}
           </button>
@@ -208,14 +217,14 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ threadId, onBack, isFoll
           />
         ))}
       </div>
-      <div className="mt-6 border-t border-gray-200 bg-white p-4 pt-4 dark:border-gray-700 dark:bg-gray-900 sm:rounded-sm shadow-sm" id="reply-form">
+      <div className="themed-card mt-6 p-4 pt-4 shadow-[var(--card-shadow)]" id="reply-form">
         <Dialog open={showReplyForm} onOpenChange={setShowReplyForm}>
           <div className="flex justify-center">
             <DialogTrigger asChild>
               <button
-                className="flex w-full items-center justify-center gap-2 rounded border border-gray-300 bg-white px-6 py-3 font-bold text-[#333] shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800 sm:w-auto"
+                className="themed-secondary-action flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-bold transition-colors sm:w-auto"
               >
-                <span className="text-xl text-[#2da0b3]">✏️</span>
+                <span className="text-xl text-[hsl(var(--brand))]">✏️</span>
                 {t('thread.reply')}
               </button>
             </DialogTrigger>

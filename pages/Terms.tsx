@@ -11,11 +11,11 @@ interface TermsProps {
 // 章节容器：保持一致的标题与正文样式。
 // Section container: consistent heading/body styles.
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
-  <section id={id} className="mb-10 scroll-mt-20">
-    <h3 className="mb-4 border-b border-gray-200 pb-2 text-xl font-bold text-gray-800 dark:border-gray-700 dark:text-gray-100 md:text-2xl">
+  <section id={id} className="themed-static-section mb-10">
+    <h3 className="themed-static-section-title mb-4 pb-3 text-xl font-bold md:text-2xl">
       {title}
     </h3>
-    <div className="space-y-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 md:text-base">
+    <div className="space-y-4 text-sm leading-relaxed text-foreground md:text-base">
       {children}
     </div>
   </section>
@@ -40,37 +40,39 @@ export const Terms: React.FC<TermsProps> = ({ onBack }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f0f0f0] pb-10 dark:bg-background">
-      {/* Header Banner */}
-      <div className="bg-[#37474f] text-white py-10 px-4 mb-6 shadow-sm">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{t('terms.title')}</h1>
-          <p className="opacity-90">Effective Date: February 3, 2026</p>
-        </div>
-      </div>
+    <div className="themed-page min-h-screen pb-10">
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <section className="themed-static-hero mb-6 p-6 md:p-8">
+          <div className="themed-kicker mb-3">{t('footer.terms')}</div>
+          <button onClick={onBack} className="themed-inline-action mb-3 text-sm">
+            &larr; {t('nav.home')}
+          </button>
+          <h1 className="themed-heading mb-3 text-3xl md:text-4xl">{t('terms.title')}</h1>
+          <p className="themed-meta text-sm leading-7">Effective Date: February 3, 2026</p>
+        </section>
 
-      <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col gap-8 md:flex-row">
         {/* Sidebar Nav (Desktop) */}
         <aside className="hidden md:block w-64 flex-shrink-0">
-          <div className="sticky top-20 rounded border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-            <div className="mb-4 px-2 font-bold text-gray-900 dark:text-gray-100">{t('terms.contents')}</div>
+          <div className="themed-static-sidebar sticky top-20 p-4">
+            <div className="themed-kicker mb-4 px-2">{t('terms.contents')}</div>
             <nav className="space-y-1">
               {navItems.map(item => (
                 <button
                   key={item.id}
                   onClick={() => scrollTo(item.id)}
-                  className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                  className={`themed-static-nav w-full px-3 py-2 text-left text-sm ${
                     activeSection === item.id 
-                      ? 'border-l-4 border-[#2da0b3] bg-gray-100 font-bold text-black dark:bg-gray-800 dark:text-gray-100'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
+                      ? 'themed-static-nav-active'
+                      : ''
                   }`}
                 >
                   {item.label}
                 </button>
               ))}
             </nav>
-            <div className="mt-6 border-t border-gray-100 pt-4 dark:border-gray-800">
-              <button onClick={onBack} className="flex items-center gap-1 px-2 text-sm text-[#0056b3] hover:underline dark:text-sky-300">
+            <div className="mt-6 border-t border-border pt-4">
+              <button onClick={onBack} className="themed-inline-action flex items-center gap-1 px-2 text-sm">
                 &larr; {t('nav.home')}
               </button>
             </div>
@@ -79,13 +81,13 @@ export const Terms: React.FC<TermsProps> = ({ onBack }) => {
 
         {/* Mobile Nav / Back */}
         <div className="md:hidden mb-4">
-          <button onClick={onBack} className="font-bold text-[#0056b3] hover:underline dark:text-sky-300">
+          <button onClick={onBack} className="themed-inline-action font-bold">
             &larr; {t('nav.home')}
           </button>
         </div>
 
         {/* Main Content */}
-        <main className="min-h-[500px] flex-1 rounded border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 md:p-10">
+        <main className="themed-static-main min-h-[500px] flex-1 p-6 md:p-10">
           
           <Section id="acceptance" title={t('terms.section.acceptance')}>
             <p>
@@ -100,7 +102,7 @@ export const Terms: React.FC<TermsProps> = ({ onBack }) => {
             <p>
               {t('terms.conduct.intro')}
             </p>
-            <ul className="mt-2 list-inside list-disc space-y-2 rounded border border-gray-100 bg-gray-50 p-4 pl-2 dark:border-gray-700 dark:bg-gray-800/70">
+            <ul className="themed-metric-card mt-2 list-inside list-disc space-y-2 p-4 pl-2">
               <li><strong>{t('terms.conduct.illegal')}</strong></li>
               <li><strong>{t('terms.conduct.harassment')}</strong></li>
               <li><strong>{t('terms.conduct.spam')}</strong></li>
@@ -129,13 +131,13 @@ export const Terms: React.FC<TermsProps> = ({ onBack }) => {
               <li>{t('terms.moderation.right2')}</li>
               <li>{t('terms.moderation.right3')}</li>
             </ol>
-            <p className="mt-2 text-sm italic text-gray-500 dark:text-gray-400">
+            <p className="themed-meta mt-2 text-sm italic">
               {t('terms.moderation.note')}
             </p>
           </Section>
 
           <Section id="disclaimer" title={t('terms.section.disclaimer')}>
-            <p className="mb-2 text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('terms.disclaimer.warning')}</p>
+            <p className="themed-kicker mb-2 text-xs">{t('terms.disclaimer.warning')}</p>
             <p>
               {t('terms.disclaimer.text1')}
             </p>
@@ -145,6 +147,7 @@ export const Terms: React.FC<TermsProps> = ({ onBack }) => {
           </Section>
 
         </main>
+      </div>
       </div>
     </div>
   );

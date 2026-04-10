@@ -87,11 +87,9 @@ module.exports = {
   			'accordion-up': 'accordion-up 0.2s ease-out'
   		},
   		fontFamily: {
-  			sans: [
-  				'Hiragino Kaku Gothic ProN"',
-  				'Meiryo"',
-  				'sans-serif'
-  			]
+  			sans: ['var(--font-sans)'],
+  			serif: ['var(--font-serif)'],
+  			mono: ['var(--font-mono)']
   		}
   	}
   },

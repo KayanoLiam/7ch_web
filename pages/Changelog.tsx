@@ -13,38 +13,38 @@ export const Changelog: React.FC<ChangelogProps> = ({ onBack }) => {
     const { t } = useTranslation();
 
     return (
-        <div className="min-h-[calc(100vh-3.5rem)] bg-[#f0f0f0] pb-10 dark:bg-background">
+        <div className="themed-page min-h-[calc(100vh-3.5rem)] pb-10">
             <div className="max-w-4xl mx-auto py-6 px-2 sm:px-4">
                 {/* Header matched to BBS style */}
-                <div className="mb-2 flex items-center gap-3 text-xl font-bold text-gray-700 dark:text-gray-100">
-                    <button onClick={onBack} className="flex items-center gap-1 text-sm font-normal text-[#0056b3] hover:underline dark:text-sky-300">
+                <div className="mb-2 flex items-center gap-3 text-xl font-bold text-foreground">
+                    <button onClick={onBack} className="themed-inline-action flex items-center gap-1 text-sm font-normal">
                         ← Back to 7ch
                     </button>
-                    <span className="text-gray-400 dark:text-gray-600">/</span>
-                    <span>Changelog</span>
+                    <span className="themed-meta">/</span>
+                    <span className="themed-heading text-xl">Changelog</span>
                 </div>
-                <p className="mb-6 px-1 text-sm text-gray-600 dark:text-gray-400">All major updates and releases.</p>
+                <p className="themed-meta mb-6 px-1 text-sm">All major updates and releases.</p>
 
                 {/* List */}
                 <div className="space-y-4">
                     {changelogData.map((entry, index) => (
-                        <div key={index} className="rounded-sm border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 md:p-6">
-                            <div className="mb-4 flex flex-col gap-2 border-b border-gray-100 pb-3 dark:border-gray-800 md:flex-row md:items-baseline md:gap-4">
-                                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                        <div key={index} className="themed-list-card p-5 md:p-6">
+                            <div className="mb-4 flex flex-col gap-2 border-b border-border pb-3 md:flex-row md:items-baseline md:gap-4">
+                                <h2 className="themed-heading-sm text-lg">
                                     {entry.title}
                                 </h2>
-                                <div className="font-mono text-xs text-gray-500 dark:text-gray-400">
+                                <div className="themed-meta font-mono text-xs">
                                     {entry.version}
                                 </div>
-                                <div className="text-xs font-bold text-gray-400 dark:text-gray-500 md:ml-auto">
+                                <div className="themed-kicker md:ml-auto">
                                     {entry.date}
                                 </div>
                             </div>
 
                             <ul className="space-y-2">
                                 {entry.changes.map((change, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                                        <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-gray-400 dark:bg-gray-500" />
+                                    <li key={i} className="flex items-start gap-2 text-sm leading-relaxed text-foreground">
+                                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[hsl(var(--brand))]" />
                                         <span>{change}</span>
                                     </li>
                                 ))}

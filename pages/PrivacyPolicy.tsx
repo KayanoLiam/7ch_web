@@ -11,11 +11,11 @@ interface PrivacyPolicyProps {
 // 通用章节组件：统一标题样式与布局。
 // Shared section component for consistent layout.
 const Section: React.FC<{ id: string; title: string; children: React.ReactNode }> = ({ id, title, children }) => (
-  <section id={id} className="mb-10 scroll-mt-20">
-    <h3 className="mb-4 border-b border-gray-200 pb-2 text-xl font-bold text-gray-800 dark:border-gray-700 dark:text-gray-100 md:text-2xl">
+  <section id={id} className="themed-static-section mb-10">
+    <h3 className="themed-static-section-title mb-4 pb-3 text-xl font-bold md:text-2xl">
       {title}
     </h3>
-    <div className="space-y-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300 md:text-base">
+    <div className="space-y-4 text-sm leading-relaxed text-foreground md:text-base">
       {children}
     </div>
   </section>
@@ -41,37 +41,39 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f0f0f0] pb-10 dark:bg-background">
-      {/* Header Banner */}
-      <div className="bg-[#455a64] text-white py-10 px-4 mb-6 shadow-sm">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{t('privacy.title')}</h1>
-          <p className="opacity-90">Last Updated: February 3, 2026</p>
-        </div>
-      </div>
+    <div className="themed-page min-h-screen pb-10">
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <section className="themed-static-hero mb-6 p-6 md:p-8">
+          <div className="themed-kicker mb-3">{t('footer.privacy')}</div>
+          <button onClick={onBack} className="themed-inline-action mb-3 text-sm">
+            &larr; {t('nav.home')}
+          </button>
+          <h1 className="themed-heading mb-3 text-3xl md:text-4xl">{t('privacy.title')}</h1>
+          <p className="themed-meta text-sm leading-7">Last Updated: February 3, 2026</p>
+        </section>
 
-      <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col gap-8 md:flex-row">
         {/* Sidebar Nav (Desktop) */}
         <aside className="hidden md:block w-64 flex-shrink-0">
-          <div className="sticky top-20 rounded border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-            <div className="mb-4 px-2 font-bold text-gray-900 dark:text-gray-100">{t('privacy.contents')}</div>
+          <div className="themed-static-sidebar sticky top-20 p-4">
+            <div className="themed-kicker mb-4 px-2">{t('privacy.contents')}</div>
             <nav className="space-y-1">
               {navItems.map(item => (
                 <button
                   key={item.id}
                   onClick={() => scrollTo(item.id)}
-                  className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                  className={`themed-static-nav w-full px-3 py-2 text-left text-sm ${
                     activeSection === item.id 
-                      ? 'border-l-4 border-[#2da0b3] bg-gray-100 font-bold text-black dark:bg-gray-800 dark:text-gray-100'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
+                      ? 'themed-static-nav-active'
+                      : ''
                   }`}
                 >
                   {item.label}
                 </button>
               ))}
             </nav>
-            <div className="mt-6 border-t border-gray-100 pt-4 dark:border-gray-800">
-              <button onClick={onBack} className="flex items-center gap-1 px-2 text-sm text-[#0056b3] hover:underline dark:text-sky-300">
+            <div className="mt-6 border-t border-border pt-4">
+              <button onClick={onBack} className="themed-inline-action flex items-center gap-1 px-2 text-sm">
                 &larr; {t('nav.home')}
               </button>
             </div>
@@ -80,13 +82,13 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
 
         {/* Mobile Nav / Back */}
         <div className="md:hidden mb-4">
-          <button onClick={onBack} className="font-bold text-[#0056b3] hover:underline dark:text-sky-300">
+          <button onClick={onBack} className="themed-inline-action font-bold">
             &larr; {t('nav.home')}
           </button>
         </div>
 
         {/* Main Content */}
-        <main className="min-h-[500px] flex-1 rounded border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 md:p-10">
+        <main className="themed-static-main min-h-[500px] flex-1 p-6 md:p-10">
           
           <Section id="intro" title={t('privacy.section.intro')}>
             <p>
@@ -112,9 +114,9 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
             <p>
               {t('privacy.storage.intro')}
             </p>
-            <div className="mb-4 mt-2 border-l-4 border-yellow-400 bg-yellow-50 p-4 dark:bg-amber-950/40">
-              <p className="text-sm font-bold text-yellow-800 dark:text-amber-200">{t('privacy.storage.note-title')}</p>
-              <p className="mt-1 text-sm text-yellow-800 dark:text-amber-200">
+            <div className="themed-callout-warn mb-4 mt-2 p-4">
+              <p className="text-sm font-bold">{t('privacy.storage.note-title')}</p>
+              <p className="mt-1 text-sm">
                 {t('privacy.storage.note')}
               </p>
             </div>
@@ -132,11 +134,11 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
             <p>
               {t('privacy.anonymity.intro')}
             </p>
-            <h4 className="mb-2 mt-4 font-bold text-gray-800 dark:text-gray-100">{t('privacy.anonymity.how')}</h4>
+            <h4 className="themed-heading-sm mb-2 mt-4 text-lg">{t('privacy.anonymity.how')}</h4>
             <p>
               {t('privacy.anonymity.desc')}
             </p>
-            <code className="mb-2 mt-2 block rounded bg-gray-100 p-2 text-xs font-mono dark:bg-gray-800 dark:text-gray-100">
+            <code className="themed-code-inline mb-2 mt-2 block p-2 text-xs font-mono">
               Hash( IP + Date(UTC) + Board_ID + Secret_Salt )
             </code>
             <p>
@@ -175,6 +177,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
           </Section>
 
         </main>
+      </div>
       </div>
     </div>
   );

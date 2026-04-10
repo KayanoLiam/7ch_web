@@ -221,9 +221,14 @@ const resources = {
                   "lang.zh": "中文",
                   "lang.ja": "日本語",
                   "theme.title": "主题",
+                  "theme.mode.title": "明暗",
                   "theme.light": "浅色",
                   "theme.dark": "深色",
                   "theme.system": "跟随系统",
+                  "theme.variant.title": "风格",
+                  "theme.variant.classic": "原版",
+                  "theme.variant.claude": "Claude",
+                  "theme.variant.scheme1": "チャコールピンク",
 
                   // Footer
                   "footer.privacy": "隐私政策",
@@ -785,9 +790,14 @@ A: 互联网不是法外之地。虽然本站承诺不建立用户画像，但�
                   "lang.zh": "中文",
                   "lang.ja": "日本語",
                   "theme.title": "テーマ",
+                  "theme.mode.title": "表示",
                   "theme.light": "ライト",
                   "theme.dark": "ダーク",
                   "theme.system": "システム",
+                  "theme.variant.title": "スタイル",
+                  "theme.variant.classic": "従来",
+                  "theme.variant.claude": "Claude",
+                  "theme.variant.scheme1": "炭粉",
 
                   // Footer
                   "footer.privacy": "プライバシーポリシー",

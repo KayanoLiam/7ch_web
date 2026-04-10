@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '../lib/utils';
+import { useTheme } from './theme-provider';
 
 import type { JobMeta } from '../types';
 import {
@@ -19,11 +21,11 @@ interface JobMetaPanelProps {
 }
 
 const FieldRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+  <div className="themed-card-muted p-3">
+    <div className="themed-kicker mb-1">
       {label}
     </div>
-    <div className="text-sm leading-relaxed text-slate-900 dark:text-slate-100">{value}</div>
+    <div className="text-sm leading-relaxed text-foreground">{value}</div>
   </div>
 );
 
@@ -33,17 +35,19 @@ export const JobMetaPanel: React.FC<JobMetaPanelProps> = ({
   onToggleContactValue,
 }) => {
   const { t } = useTranslation();
+  const { themeVariant } = useTheme();
+  const isClaude = themeVariant === 'claude';
   const contactValue = showContactValue
     ? jobMeta.contactValue
     : maskContactValue(jobMeta.contactValue);
 
   return (
-    <section className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <section className={cn('themed-card themed-card-featured mb-4 p-4', isClaude && 'rounded-[1.6rem]')}>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-sky-700 dark:bg-sky-900/40 dark:text-sky-200">
+        <span className="themed-chip-accent px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide">
           {t('job.summary.badge')}
         </span>
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+        <h2 className={cn('themed-heading text-lg', isClaude && 'text-[1.45rem]')}>
           {t('job.detail.title')}
         </h2>
       </div>
@@ -92,24 +96,24 @@ export const JobMetaPanel: React.FC<JobMetaPanelProps> = ({
           label={t('job.fields.contactType')}
           value={getContactTypeLabel(t, jobMeta.contactType)}
         />
-        <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <div className="themed-card-muted p-3">
+          <div className="themed-kicker mb-1">
             {t('job.fields.contactValue')}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm leading-relaxed text-slate-900 dark:text-slate-100">
+            <span className="text-sm leading-relaxed text-foreground">
               {contactValue}
             </span>
             <button
               type="button"
               onClick={onToggleContactValue}
-              className="rounded border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="themed-secondary-action rounded-xl px-3 py-1 text-xs font-semibold transition"
             >
               {showContactValue ? t('job.contact.hide') : t('job.contact.reveal')}
             </button>
           </div>
           {!showContactValue && (
-            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="themed-meta mt-2 text-xs">
               {t('job.contact.maskedNote')}
             </div>
           )}

@@ -11,6 +11,8 @@ import { Button } from './components/ui/button';
 import { DonateModal } from './components/DonateModal';
 import { Pagination } from './components/Pagination';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
+import { useTheme } from './components/theme-provider';
+import { cn } from './lib/utils';
 
 import {
   AlertDialog,
@@ -22,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogTrigger } from './components/ui/dialog';
 import { Docs } from './pages/Docs';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
@@ -43,10 +45,21 @@ import { buildJobMetaSearchText } from './lib/jobMeta';
 // App entry: routing, global state, SSE notices, and overall layout.
 
 const STATIC_BOARDS: Board[] = [commonLinksBoard];
+const HIDDEN_BOARD_IDS = new Set(['baito']);
+
+const isBoardVisible = (boardId: string) => !HIDDEN_BOARD_IDS.has(boardId);
+
+const filterVisibleBoards = (sourceBoards: Board[]) => {
+  return sourceBoards.filter((board) => isBoardVisible(board.id));
+};
+
+const filterVisibleThreads = (sourceThreads: Thread[]) => {
+  return sourceThreads.filter((thread) => isBoardVisible(thread.boardId));
+};
 
 const mergeBoardsWithStatic = (sourceBoards: Board[]) => {
   const seen = new Set<string>();
-  return [...sourceBoards, ...STATIC_BOARDS].filter((board) => {
+  return [...filterVisibleBoards(sourceBoards), ...STATIC_BOARDS].filter((board) => {
     if (seen.has(board.id)) return false;
     seen.add(board.id);
     return true;
@@ -68,6 +81,8 @@ const BoardView: React.FC<{
   refreshToken: number;
 }> = ({ boards, search, onCreateThread, onThreadClick, onToggleHide, onToggleFollow, hiddenThreads, followedThreads, refreshToken }) => {
   const { t, i18n } = useTranslation();
+  const { themeVariant } = useTheme();
+  const isClaude = themeVariant === 'claude';
   const navigate = useNavigate();
   const location = useLocation();
   const { boardId } = useParams();
@@ -111,6 +126,12 @@ const BoardView: React.FC<{
     currentBoardRef.current = boardId;
   }, [boardId]);
 
+  useEffect(() => {
+    if (boardId && !isBoardVisible(boardId)) {
+      navigate('/', { replace: true });
+    }
+  }, [boardId, navigate]);
+
   const syncLoadingState = () => {
     setLoading(inFlightPagesRef.current.size > 0);
   };
@@ -138,6 +159,7 @@ const BoardView: React.FC<{
   const loadThreads = async (page: number, append: boolean = false) => {
     const requestBoardId = boardId;
     if (!requestBoardId) return;
+    if (!isBoardVisible(requestBoardId)) return;
     if (append && loadedPagesRef.current.has(page)) return;
     if (inFlightPagesRef.current.has(page)) return;
 
@@ -148,16 +170,17 @@ const BoardView: React.FC<{
 
     try {
       const data = await api.getThreads(requestBoardId, page);
+      const visibleThreads = requestBoardId === 'all' ? filterVisibleThreads(data.threads) : data.threads;
       if (generation !== loadGenerationRef.current || currentBoardRef.current !== requestBoardId) {
         return;
       }
 
       if (append) {
         loadedPagesRef.current.add(page);
-        setThreads(prev => mergeUniqueThreads(prev, data.threads));
+        setThreads(prev => mergeUniqueThreads(prev, visibleThreads));
       } else {
         loadedPagesRef.current = new Set([page]);
-        setThreads(data.threads);
+        setThreads(visibleThreads);
       }
 
       if (append) {
@@ -244,16 +267,17 @@ const BoardView: React.FC<{
     };
   }, [isMobile, hasMore, loading, currentPage]);
 
+  if (boardId && !isBoardVisible(boardId)) return null;
   const board = boards.find(b => b.id === boardId);
-  if (!board) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Board not found</div>;
+  if (!board) return <div className="p-6 text-center themed-meta">Board not found</div>;
   const isAll = boardId === 'all';
 
   const renderThreadCard = (thread: Thread, boardName: string) => {
     if (hiddenThreads.has(thread.id)) {
       return (
-        <div key={thread.id} className="flex items-center justify-between rounded-sm border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+        <div key={thread.id} className="themed-card-muted flex items-center justify-between p-3 text-xs">
           <span className="font-bold">{t('meta.hidden_thread')}: {thread.title.substring(0, 30)}...</span>
-          <button onClick={(e) => onToggleHide(e, thread.id)} className="text-[#0056b3] hover:underline">[{t('meta.show')}]</button>
+          <button onClick={(e) => onToggleHide(e, thread.id)} className="themed-inline-action">[{t('meta.show')}]</button>
         </div>
       );
     }
@@ -278,22 +302,25 @@ const BoardView: React.FC<{
     const isFollowed = followedThreads.has(thread.id);
 
     return (
-      <div key={thread.id} className="relative group rounded-sm border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-        <div className="absolute top-4 right-4 text-xs text-gray-400 dark:text-gray-500">
+      <div key={thread.id} className={cn('themed-card themed-card-featured relative group p-5 sm:p-6', isClaude && 'overflow-hidden')}>
+        <div className="absolute top-4 right-4 text-xs themed-meta">
           {dateStr} <span className="ml-2">ID:{thread.opPost.uid}</span>
-          <button onClick={(e) => onToggleHide(e, thread.id)} className="ml-2 text-[#0056b3] hover:underline">[{t('meta.hide')}]</button>
+          <button onClick={(e) => onToggleHide(e, thread.id)} className="themed-inline-action ml-2">[{t('meta.hide')}]</button>
         </div>
         <div className="mt-1">
           <div className="mb-2 pr-40">
             <span
-              className="cursor-pointer text-lg font-bold text-[#333] hover:text-[#0056b3] hover:underline dark:text-gray-100 dark:hover:text-sky-300"
+              className={cn(
+                'themed-heading-sm cursor-pointer text-lg hover:underline sm:text-[1.35rem]',
+                isClaude && 'pr-2'
+              )}
               onClick={() => onThreadClick(thread)}
             >
               {thread.title}
             </span>
           </div>
           <div
-            className="mb-3 cursor-pointer text-sm leading-relaxed text-[#333] dark:text-gray-200"
+            className={cn('mb-4 cursor-pointer text-sm leading-relaxed text-foreground', isClaude && 'text-[15px] leading-7')}
             onClick={() => onThreadClick(thread)}
           >
             {thread.jobMeta && <JobMetaSummary jobMeta={thread.jobMeta} />}
@@ -304,19 +331,22 @@ const BoardView: React.FC<{
               https://7ch-web.vercel.app/board/{thread.boardId}/thread/{thread.id}/
             </a>
           </div>
-          <div className="flex items-center gap-4 text-xs font-bold text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-1 text-[#0056b3]">
+          <div className="flex items-center gap-4 text-xs font-bold themed-meta">
+            <div className="flex items-center gap-1 text-[hsl(var(--brand))]">
               <span>💬</span>
               <span>{thread.postCount}</span>
             </div>
-            <div className="text-[#0056b3]">{boardName}</div>
+            <div className="themed-inline-action">{boardName}</div>
             <div className="flex items-center gap-1">
               <span>⚡</span>
               <span>{thread.viewCount}</span>
             </div>
             <button
               onClick={(e) => onToggleFollow(e, thread.id)}
-              className={`px-3 py-1 rounded text-xs transition-colors ml-auto border ${isFollowed ? 'bg-white text-[#2da0b3] border-[#2da0b3]' : 'bg-[#2da0b3] text-white border-[#2da0b3] hover:bg-[#238a9b]'}`}
+              className={cn(
+                'ml-auto rounded-xl px-3 py-1.5 text-xs transition-colors',
+                isFollowed ? 'themed-secondary-action' : 'themed-primary-action'
+              )}
             >
               {isFollowed ? t('meta.following') : t('meta.follow')}
             </button>
@@ -335,9 +365,9 @@ const BoardView: React.FC<{
   }) : threads;
 
   const renderThreadsErrorState = () => (
-    <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-10">
+    <div className="themed-card themed-card-featured p-6 sm:p-10">
       <div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-4 dark:border-gray-700 sm:flex-row sm:items-center">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 sm:text-2xl">
+        <h2 className="themed-heading text-xl sm:text-2xl">
           {t('error.loadThreadsTitle')}
         </h2>
         <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/50 dark:text-amber-200 dark:ring-amber-800/40">
@@ -346,25 +376,25 @@ const BoardView: React.FC<{
         </span>
       </div>
 
-      <div className="mb-8 space-y-4 text-[15px] leading-relaxed text-gray-700 dark:text-gray-300">
-        <p className="font-medium text-gray-900 dark:text-gray-100">{t('error.loadThreadsLead')}</p>
+      <div className="mb-8 space-y-4 text-[15px] leading-relaxed text-foreground">
+        <p className="font-medium text-foreground">{t('error.loadThreadsLead')}</p>
         <p>{threadsError}</p>
-        <div className="rounded border border-sky-100 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
+        <div className="themed-card-muted p-3 text-sm text-[hsl(var(--brand))]">
           <span className="mb-1 block font-bold">{t('error.loadThreadsNoteTitle')}</span>
           {t('error.loadThreadsNoteBody')}
         </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
-          <div className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">{t('error.loadThreadsActionLabel')}</div>
+        <div className="themed-card-muted p-4">
+          <div className="themed-kicker mb-1">{t('error.loadThreadsActionLabel')}</div>
           <div className="text-lg font-bold text-amber-700 dark:text-amber-300">{t('error.loadThreadsActionValue')}</div>
-          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('error.loadThreadsActionBody')}</div>
+          <div className="themed-meta mt-1 text-xs">{t('error.loadThreadsActionBody')}</div>
         </div>
-        <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
-          <div className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">{t('error.loadThreadsCauseLabel')}</div>
-          <div className="text-lg font-bold text-gray-700 dark:text-gray-100">{t('error.loadThreadsCauseValue')}</div>
-          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('error.loadThreadsCauseBody')}</div>
+        <div className="themed-card-muted p-4">
+          <div className="themed-kicker mb-1">{t('error.loadThreadsCauseLabel')}</div>
+          <div className="text-lg font-bold text-foreground">{t('error.loadThreadsCauseValue')}</div>
+          <div className="themed-meta mt-1 text-xs">{t('error.loadThreadsCauseBody')}</div>
         </div>
       </div>
 
@@ -372,14 +402,14 @@ const BoardView: React.FC<{
         <button
           type="button"
           onClick={() => void loadThreads(currentPage, false)}
-          className="rounded-sm bg-[#2da0b3] px-6 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#238a9b]"
+          className="themed-primary-action rounded-xl px-6 py-2 text-sm font-bold transition-colors"
         >
           {t('servicePause.retry')}
         </button>
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="rounded-sm border border-gray-300 bg-white px-6 py-2 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+          className="themed-secondary-action rounded-xl px-6 py-2 text-sm font-bold transition-colors"
         >
           {t('servicePause.home')}
         </button>
@@ -388,7 +418,7 @@ const BoardView: React.FC<{
   );
 
   return (
-    <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] dark:bg-background">
+    <div className="themed-page min-h-[calc(100vh-3.5rem)]">
       <div className="max-w-4xl mx-auto py-6 px-2 sm:px-4">
         {threadsError && threads.length === 0 ? renderThreadsErrorState() : (
           <>
@@ -397,9 +427,9 @@ const BoardView: React.FC<{
                 <Dialog open={showPostForm} onOpenChange={setShowPostForm}>
                   <DialogTrigger asChild>
                     <button
-                      className="flex items-center gap-2 rounded border border-gray-300 bg-white px-5 py-2.5 text-sm font-bold text-[#333] shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                      className="themed-secondary-action flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors"
                     >
-                      <span className="text-lg text-[#2da0b3]">✏️</span>
+                      <span className="text-lg text-[hsl(var(--brand))]">✏️</span>
                       {t('thread.new')}
                     </button>
                   </DialogTrigger>
@@ -425,7 +455,7 @@ const BoardView: React.FC<{
             )}
 
             {threadsError && threads.length > 0 && (
-              <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+              <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
                 <div className="font-bold">{t('error.loadThreadsTitle')}</div>
                 <div>{threadsError}</div>
               </div>
@@ -451,7 +481,7 @@ const BoardView: React.FC<{
             {/* Mobile Mode: Infinite Scroll Trigger */}
             {isMobile && !search.trim() && (
               <div ref={loadMoreRef} className="py-4 text-center">
-                {loading && <span className="text-gray-500 dark:text-gray-400">{t('meta.loading')}...</span>}
+                {loading && <span className="themed-meta">{t('meta.loading')}...</span>}
                 {!loading && hasMore && (
                   <button
                     onClick={() => {
@@ -459,13 +489,13 @@ const BoardView: React.FC<{
                       setCurrentPage(nextPage);
                       loadThreads(nextPage, true);
                     }}
-                    className="text-[#0056b3] hover:underline dark:text-sky-300"
+                    className="themed-inline-action"
                   >
                     {t('pagination.load_more')}
                   </button>
                 )}
                 {!hasMore && threads.length > 0 && (
-                  <div className="text-gray-500 dark:text-gray-400">{t('pagination.no_more')}</div>
+                  <div className="themed-meta">{t('pagination.no_more')}</div>
                 )}
               </div>
             )}
@@ -488,6 +518,8 @@ const FavoritesView: React.FC<{
   hiddenThreads: Set<string>;
 }> = ({ followedThreads, boards, onThreadClick, onToggleHide, onToggleFollow, hiddenThreads }) => {
   const { t, i18n } = useTranslation();
+  const { themeVariant } = useTheme();
+  const isClaude = themeVariant === 'claude';
   const navigate = useNavigate();
   const location = useLocation();
   const [favThreads, setFavThreads] = useState<Thread[]>([]);
@@ -510,8 +542,9 @@ const FavoritesView: React.FC<{
           navigate(redirectPath);
           return;
         }
-        validThreads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-        setFavThreads(validThreads);
+        const visibleThreads = filterVisibleThreads(validThreads);
+        visibleThreads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        setFavThreads(visibleThreads);
       } finally {
         setLoadingFavs(false);
       }
@@ -522,9 +555,9 @@ const FavoritesView: React.FC<{
   const renderThreadCard = (thread: Thread, boardName: string) => {
     if (hiddenThreads.has(thread.id)) {
       return (
-        <div key={thread.id} className="flex items-center justify-between rounded-sm border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+        <div key={thread.id} className="themed-card-muted flex items-center justify-between p-3 text-xs">
           <span className="font-bold">{t('meta.hidden_thread')}: {thread.title.substring(0, 30)}...</span>
-          <button onClick={(e) => onToggleHide(e, thread.id)} className="text-[#0056b3] hover:underline">[{t('meta.show')}]</button>
+          <button onClick={(e) => onToggleHide(e, thread.id)} className="themed-inline-action">[{t('meta.show')}]</button>
         </div>
       );
     }
@@ -549,22 +582,22 @@ const FavoritesView: React.FC<{
     const isFollowed = followedThreads.has(thread.id);
 
     return (
-      <div key={thread.id} className="relative group rounded-sm border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-        <div className="absolute top-4 right-4 text-xs text-gray-400 dark:text-gray-500">
+      <div key={thread.id} className={cn('themed-card themed-card-featured relative group p-5 sm:p-6', isClaude && 'overflow-hidden')}>
+        <div className="absolute top-4 right-4 text-xs themed-meta">
           {dateStr} <span className="ml-2">ID:{thread.opPost.uid}</span>
-          <button onClick={(e) => onToggleHide(e, thread.id)} className="ml-2 text-[#0056b3] hover:underline">[{t('meta.hide')}]</button>
+          <button onClick={(e) => onToggleHide(e, thread.id)} className="themed-inline-action ml-2">[{t('meta.hide')}]</button>
         </div>
         <div className="mt-1">
           <div className="mb-2 pr-40">
             <span
-              className="cursor-pointer text-lg font-bold text-[#333] hover:text-[#0056b3] hover:underline dark:text-gray-100 dark:hover:text-sky-300"
+              className="themed-heading-sm cursor-pointer text-lg hover:underline sm:text-[1.35rem]"
               onClick={() => onThreadClick(thread)}
             >
               {thread.title}
             </span>
           </div>
           <div
-            className="mb-3 cursor-pointer text-sm leading-relaxed text-[#333] dark:text-gray-200"
+            className={cn('mb-4 cursor-pointer text-sm leading-relaxed text-foreground', isClaude && 'text-[15px] leading-7')}
             onClick={() => onThreadClick(thread)}
           >
             {thread.jobMeta && <JobMetaSummary jobMeta={thread.jobMeta} />}
@@ -575,19 +608,22 @@ const FavoritesView: React.FC<{
               https://7ch-web.vercel.app/board/{thread.boardId}/thread/{thread.id}/
             </a>
           </div>
-          <div className="flex items-center gap-4 text-xs font-bold text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-1 text-[#0056b3]">
+          <div className="flex items-center gap-4 text-xs font-bold themed-meta">
+            <div className="flex items-center gap-1 text-[hsl(var(--brand))]">
               <span>💬</span>
               <span>{thread.postCount}</span>
             </div>
-            <div className="text-[#0056b3]">{boardName}</div>
+            <div className="themed-inline-action">{boardName}</div>
             <div className="flex items-center gap-1">
               <span>⚡</span>
               <span>{thread.viewCount}</span>
             </div>
             <button
               onClick={(e) => onToggleFollow(e, thread.id)}
-              className={`px-3 py-1 rounded text-xs transition-colors ml-auto border ${isFollowed ? 'bg-white text-[#2da0b3] border-[#2da0b3]' : 'bg-[#2da0b3] text-white border-[#2da0b3] hover:bg-[#238a9b]'}`}
+              className={cn(
+                'ml-auto rounded-xl px-3 py-1.5 text-xs transition-colors',
+                isFollowed ? 'themed-secondary-action' : 'themed-primary-action'
+              )}
             >
               {isFollowed ? t('meta.following') : t('meta.follow')}
             </button>
@@ -598,15 +634,15 @@ const FavoritesView: React.FC<{
   };
 
   return (
-    <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] dark:bg-background">
+    <div className="themed-page min-h-[calc(100vh-3.5rem)]">
       <div className="max-w-4xl mx-auto py-6 px-2 sm:px-4">
-        <div className="mb-4 flex items-center gap-2 text-xl font-bold text-gray-700 dark:text-gray-100">
+        <div className="themed-heading mb-4 flex items-center gap-2 text-xl">
           <span>★</span> {t('nav.favorites')}
         </div>
         {loadingFavs ? (
-          <div className="py-10 text-center text-gray-500 dark:text-gray-400">{t('meta.loading')}</div>
+          <div className="themed-meta py-10 text-center">{t('meta.loading')}</div>
         ) : favThreads.length === 0 ? (
-          <div className="rounded border border-gray-200 bg-white p-10 text-center text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+          <div className="themed-card p-10 text-center themed-meta">
             {t('meta.no_favorites')}
           </div>
         ) : (
@@ -636,10 +672,17 @@ const ThreadViewWrapper: React.FC<{
   const { boardId, threadId } = useParams();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (boardId && !isBoardVisible(boardId)) {
+      navigate('/', { replace: true });
+    }
+  }, [boardId, navigate]);
+
   if (!boardId || !threadId) return <div>Invalid thread</div>;
+  if (!isBoardVisible(boardId)) return null;
 
   return (
-    <div className="bg-[#f0f0f0] min-h-[calc(100vh-3.5rem)] pt-4 dark:bg-background">
+    <div className="themed-page min-h-[calc(100vh-3.5rem)] pt-4">
       <ThreadView
         threadId={threadId}
         onBack={() => navigate(`/board/${boardId}`)}
@@ -657,6 +700,8 @@ const ThreadViewWrapper: React.FC<{
 // Global state + SSE updates + navigation.
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { themeVariant } = useTheme();
+  const isClaude = themeVariant === 'claude';
   const navigate = useNavigate();
   const location = useLocation();
   const [boards, setBoards] = useState<Board[]>([]);
@@ -912,10 +957,10 @@ const App: React.FC = () => {
   // Split rendering into functions for clarity.
 
   const renderHeader = () => (
-    <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
+    <header className="themed-header-shell sticky top-0 z-20">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-          <span className="text-xl sm:text-2xl font-bold text-gray-600 dark:text-gray-100 font-serif tracking-tight">7ちゃんねる</span>
+          <span className={cn('themed-brandmark text-xl sm:text-2xl', isClaude && 'text-[1.55rem] sm:text-[2rem]')}>7ちゃんねる</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center relative">
@@ -923,19 +968,22 @@ const App: React.FC = () => {
               ref={searchInputRef}
               type="text"
               placeholder={t('board.catalog')}
-              className="w-48 rounded border border-gray-300 bg-gray-100 px-3 py-1 pr-8 text-sm text-gray-800 transition-colors focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-gray-600"
+              className={cn(
+                'themed-search-field w-48 rounded-xl px-3 py-1.5 pr-8 text-sm transition-colors focus:border-[hsl(var(--ring))] focus:outline-none',
+                isClaude && 'w-56'
+              )}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <div className="absolute right-2 flex items-center gap-1 pointer-events-none">
-              <kbd className="hidden h-5 select-none items-center gap-1 rounded border border-gray-300 bg-gray-200 px-1.5 font-mono text-[10px] font-medium text-gray-500 opacity-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 sm:inline-flex">
+              <kbd className="themed-search-kbd hidden h-5 select-none items-center gap-1 rounded-md px-1.5 font-mono text-[10px] font-medium opacity-100 sm:inline-flex">
                 <span className="text-xs">⌘</span>K
               </kbd>
-              <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <Search className="h-4 w-4 text-[hsl(var(--soft-foreground))]" />
             </div>
           </div>
           {/* Desktop navigation - hidden on mobile */}
-          <div className="hidden md:flex items-center gap-3 text-sm text-[#0056b3] font-medium">
+          <div className="hidden md:flex items-center gap-3 text-sm font-medium">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline">{t('dialog.login.button')}</Button>
@@ -955,9 +1003,9 @@ const App: React.FC = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <button className="hover:underline" onClick={() => navigate('/')}>{t('nav.boards')}</button>
+            <button className="themed-nav-link hover:underline" onClick={() => navigate('/')}>{t('nav.boards')}</button>
             <button
-              className="hover:underline"
+              className="themed-nav-link hover:underline"
               onClick={() => navigate('/favorites')}
             >
               {t('nav.favorites')}
@@ -968,7 +1016,7 @@ const App: React.FC = () => {
                 <button
                   key={l}
                   onClick={() => changeLang(l)}
-                  className={`text-xs ${i18n.language === l ? 'font-bold text-black dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}
+                  className={cn('text-xs', i18n.language === l ? 'font-bold text-foreground' : 'themed-meta')}
                 >
                   {l === 'zh-CN' ? '中文' : '日'}
                 </button>
@@ -978,22 +1026,22 @@ const App: React.FC = () => {
           {/* Mobile dropdown menu */}
           <div className="md:hidden relative">
             <button
-              className="p-2 text-sm font-medium text-[#0056b3] dark:text-sky-300"
+              className="themed-nav-link p-2 text-sm font-medium"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
             >
               ☰
             </button>
             {showMobileMenu && (
-              <div className="absolute right-0 z-50 mt-2 w-56 rounded border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+              <div className="themed-card themed-card-featured absolute right-0 z-50 mt-2 w-64 overflow-hidden">
                 <div className="py-1">
                   <button
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800"
+                    className="block w-full px-4 py-2 text-left text-sm text-foreground hover:bg-secondary"
                     onClick={() => setShowMobileLoginDialog(true)}
                   >
                     {t('dialog.login.button')}
                   </button>
                   <button
-                    className="block w-full border-t border-gray-200 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800"
+                    className="block w-full border-t border-border px-4 py-2 text-left text-sm text-foreground hover:bg-secondary"
                     onClick={() => {
                       navigate('/');
                       setShowMobileMenu(false);
@@ -1002,7 +1050,7 @@ const App: React.FC = () => {
                     {t('nav.boards')}
                   </button>
                   <button
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800"
+                    className="block w-full px-4 py-2 text-left text-sm text-foreground hover:bg-secondary"
                     onClick={() => {
                       navigate('/favorites');
                       setShowMobileMenu(false);
@@ -1010,13 +1058,13 @@ const App: React.FC = () => {
                   >
                     {t('nav.favorites')}
                   </button>
-                  <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <div className="border-t border-border px-4 py-3">
+                    <div className="themed-kicker mb-2">
                       {t('theme.title')}
                     </div>
                     <ThemeSwitcher compact fullWidth />
                   </div>
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-1">
+                  <div className="border-t border-border pt-1">
                     {['zh-CN', 'ja-JP'].map(l => (
                       <button
                         key={l}
@@ -1024,7 +1072,7 @@ const App: React.FC = () => {
                           changeLang(l);
                           setShowMobileMenu(false);
                         }}
-                        className={`block w-full px-4 py-2 text-left text-sm ${i18n.language === l ? 'font-bold text-black dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}
+                        className={cn('block w-full px-4 py-2 text-left text-sm', i18n.language === l ? 'font-bold text-foreground' : 'themed-meta')}
                       >
                         {l === 'zh-CN' ? '中文' : '日'}
                       </button>
@@ -1108,32 +1156,32 @@ const App: React.FC = () => {
   );
 
   const renderFooter = () => (
-    <footer className="mt-auto py-8 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-border bg-card">
+    <footer className={cn('themed-footer-shell mt-auto py-8 text-center text-sm', isClaude && 'bg-[hsl(var(--surface-muted))]')}>
       <div className="flex justify-center flex-wrap gap-4 sm:gap-6 mb-4">
-        <Link to="/privacy"><button className="text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300">{t('footer.privacy')}</button></Link>
-        <Link to="/docs"><button className="text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300">{t('footer.tech')}</button></Link>
-        <Link to="/terms"><button className="text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300">{t('footer.terms')}</button></Link>
-        <Link to="/help"><button className="text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300">{t('footer.help')}</button></Link>
-        <Link to="/QA"><button className="text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300">{t('footer.QA')}</button></Link>
-        <Link to="/changelog"><button className="text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300">Changelog</button></Link>
+        <Link to="/privacy"><button className="themed-nav-link hover:underline">{t('footer.privacy')}</button></Link>
+        <Link to="/docs"><button className="themed-nav-link hover:underline">{t('footer.tech')}</button></Link>
+        <Link to="/terms"><button className="themed-nav-link hover:underline">{t('footer.terms')}</button></Link>
+        <Link to="/help"><button className="themed-nav-link hover:underline">{t('footer.help')}</button></Link>
+        <Link to="/QA"><button className="themed-nav-link hover:underline">{t('footer.QA')}</button></Link>
+        <Link to="/changelog"><button className="themed-nav-link hover:underline">Changelog</button></Link>
         <Link to="/tools/convert">
-          <button className="inline-flex items-center gap-2 text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300">
+          <button className="themed-nav-link inline-flex items-center gap-2 hover:underline">
             <span>{t('tools.convert.link')}</span>
-            <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:border-amber-700 dark:bg-amber-900/50 dark:text-amber-200">
+            <span className="themed-chip px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-200">
               {t('tools.convert.badge')}
             </span>
           </button>
         </Link>
-        <button className="text-gray-500 hover:underline hover:text-[#0056b3] dark:text-gray-400 dark:hover:text-sky-300" onClick={() => setShowDonateModal(true)}>{t('footer.donate')}</button>
+        <button className="themed-nav-link hover:underline" onClick={() => setShowDonateModal(true)}>{t('footer.donate')}</button>
       </div>
       <div>&copy; 2024 7ch Project. All rights reserved.</div>
     </footer>
   );
 
   const renderBoardsErrorState = () => (
-    <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-10">
+    <div className="themed-card themed-card-featured p-6 sm:p-10">
       <div className="mb-6 flex flex-col justify-between gap-4 border-b border-gray-200 pb-4 dark:border-gray-700 sm:flex-row sm:items-center">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 sm:text-2xl">
+        <h2 className="themed-heading text-xl sm:text-2xl">
           {t('error.loadBoardsTitle')}
         </h2>
         <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/50 dark:text-amber-200 dark:ring-amber-800/40">
@@ -1142,25 +1190,25 @@ const App: React.FC = () => {
         </span>
       </div>
 
-      <div className="mb-8 space-y-4 text-[15px] leading-relaxed text-gray-700 dark:text-gray-300">
-        <p className="font-medium text-gray-900 dark:text-gray-100">{t('error.loadBoardsLead')}</p>
+      <div className="mb-8 space-y-4 text-[15px] leading-relaxed text-foreground">
+        <p className="font-medium text-foreground">{t('error.loadBoardsLead')}</p>
         <p>{boardsError}</p>
-        <div className="rounded border border-sky-100 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
+        <div className="themed-card-muted p-3 text-sm text-[hsl(var(--brand))]">
           <span className="mb-1 block font-bold">{t('error.loadBoardsNoteTitle')}</span>
           {t('error.loadBoardsNoteBody')}
         </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
-          <div className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">{t('error.loadBoardsActionLabel')}</div>
+        <div className="themed-card-muted p-4">
+          <div className="themed-kicker mb-1">{t('error.loadBoardsActionLabel')}</div>
           <div className="text-lg font-bold text-amber-700 dark:text-amber-300">{t('error.loadBoardsActionValue')}</div>
-          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('error.loadBoardsActionBody')}</div>
+          <div className="themed-meta mt-1 text-xs">{t('error.loadBoardsActionBody')}</div>
         </div>
-        <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
-          <div className="mb-1 text-xs font-bold text-gray-500 dark:text-gray-400">{t('error.loadBoardsCauseLabel')}</div>
-          <div className="text-lg font-bold text-gray-700 dark:text-gray-100">{t('error.loadBoardsCauseValue')}</div>
-          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('error.loadBoardsCauseBody')}</div>
+        <div className="themed-card-muted p-4">
+          <div className="themed-kicker mb-1">{t('error.loadBoardsCauseLabel')}</div>
+          <div className="text-lg font-bold text-foreground">{t('error.loadBoardsCauseValue')}</div>
+          <div className="themed-meta mt-1 text-xs">{t('error.loadBoardsCauseBody')}</div>
         </div>
       </div>
 
@@ -1168,14 +1216,14 @@ const App: React.FC = () => {
         <button
           type="button"
           onClick={() => void loadBoards()}
-          className="rounded-sm bg-[#2da0b3] px-6 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#238a9b]"
+          className="themed-primary-action rounded-xl px-6 py-2 text-sm font-bold transition-colors"
         >
           {t('servicePause.retry')}
         </button>
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="rounded-sm border border-gray-300 bg-white px-6 py-2 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+          className="themed-secondary-action rounded-xl px-6 py-2 text-sm font-bold transition-colors"
         >
           {t('servicePause.home')}
         </button>
@@ -1189,19 +1237,19 @@ const App: React.FC = () => {
       {renderLiveNotices()}
       {/* Mobile Login Dialog - rendered outside main content to ensure proper layering */}
       {showMobileLoginDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:hidden">
-          <div className="bg-white rounded p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto">
-            <h3 className="font-bold text-lg mb-2">{t('dialog.login.title')}</h3>
-            <p className="text-sm mb-4">{t('dialog.login.description')}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,20,19,0.62)] p-4 backdrop-blur-[2px] md:hidden">
+          <div className="themed-dialog-surface max-h-[80vh] w-full max-w-sm overflow-y-auto p-6">
+            <h3 className="themed-heading mb-2 text-lg">{t('dialog.login.title')}</h3>
+            <p className="themed-meta mb-4 text-sm">{t('dialog.login.description')}</p>
             <div className="flex justify-end gap-2">
               <button
-                className="px-4 py-2 border border-gray-300 rounded text-sm"
+                className="themed-secondary-action rounded-xl px-4 py-2 text-sm"
                 onClick={() => setShowMobileLoginDialog(false)}
               >
                 {t('dialog.login.close')}
               </button>
               <Link to="/docs" onClick={() => setShowMobileLoginDialog(false)}>
-                <button className="px-4 py-2 bg-[#0056b3] text-white rounded text-sm">
+                <button className="themed-primary-action rounded-xl px-4 py-2 text-sm">
                   {t('dialog.login.link_text')}
                 </button>
               </Link>
@@ -1215,8 +1263,8 @@ const App: React.FC = () => {
           <Route path="/" element={
             <div className="mx-auto mt-4 max-w-4xl p-4">
               {boardsError ? renderBoardsErrorState() : (
-                <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-                  <h2 className="mb-6 border-b pb-2 text-xl font-bold text-gray-800 dark:border-gray-700 dark:text-gray-100">{t('nav.boards')}</h2>
+                <div className="themed-card themed-card-featured p-6">
+                  <h2 className="themed-heading mb-6 border-b border-border pb-3 text-xl">{t('nav.boards')}</h2>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {(search.trim() ? boards.filter(b => {
                       const s = search.trim().toLowerCase();
@@ -1226,17 +1274,17 @@ const App: React.FC = () => {
                       <div
                         key={b.id}
                         onClick={() => navigate(`/board/${b.id}`)}
-                        className="cursor-pointer rounded border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/70"
+                        className="themed-card-muted cursor-pointer p-4 transition-colors hover:bg-white/70"
                       >
                         <div className="mb-1 flex items-center gap-2">
-                          <div className="text-lg font-bold text-[#0056b3]">/{b.id}/ - {t(b.name)}</div>
+                          <div className="themed-heading-sm text-lg text-[hsl(var(--brand))]">/{b.id}/ - {t(b.name)}</div>
                           {b.id === commonLinksBoard.id && (
-                            <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-700 dark:border-sky-700 dark:bg-sky-900/40 dark:text-sky-200">
+                            <span className="themed-chip-accent inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
                               {t('commonLinks.staticBadge')}
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{t(b.description)}</div>
+                        <div className="themed-meta text-sm">{t(b.description)}</div>
                       </div>
                     ))}
                   </div>
