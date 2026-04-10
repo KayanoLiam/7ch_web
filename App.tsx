@@ -797,20 +797,6 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!showMobileMenu) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (mobileMenuRef.current?.contains(target)) return;
-      setShowMobileMenu(false);
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [showMobileMenu]);
-
-  useEffect(() => {
     routeRef.current = {
       currentBoardId,
       currentThreadId,
@@ -930,6 +916,20 @@ const App: React.FC = () => {
   const [showDonateModal, setShowDonateModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileLoginDialog, setShowMobileLoginDialog] = useState(false);
+
+  useEffect(() => {
+    if (!showMobileMenu) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (mobileMenuRef.current?.contains(target)) return;
+      setShowMobileMenu(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [showMobileMenu]);
 
   const loadBoards = async () => {
     setBoardsError(null);
