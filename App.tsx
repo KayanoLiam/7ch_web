@@ -767,6 +767,7 @@ const App: React.FC = () => {
 
   const [search, setSearch] = useState<string>('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const threadMatch = location.pathname.match(/^\/board\/([^/]+)\/thread\/([^/]+)\/?$/);
   const boardMatch = location.pathname.match(/^\/board\/([^/]+)\/?$/);
@@ -794,6 +795,20 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!showMobileMenu) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (mobileMenuRef.current?.contains(target)) return;
+      setShowMobileMenu(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [showMobileMenu]);
 
   useEffect(() => {
     routeRef.current = {
@@ -1074,7 +1089,7 @@ const App: React.FC = () => {
             </div>
           </div>
           {/* Mobile dropdown menu */}
-          <div className="md:hidden relative">
+          <div className="md:hidden relative" ref={mobileMenuRef}>
             <button
               className="themed-nav-link p-2 text-sm font-medium"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
