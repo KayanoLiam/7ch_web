@@ -96,13 +96,15 @@ export const DonateModal: React.FC<DonateModalProps> = ({ open, onClose }) => {
               {t('donate.close')}
             </Button>
             <Button
-              onClick={() => window.open('https://solana.com', '_blank', 'noopener,noreferrer')}
-              className="themed-secondary-action group flex h-10 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-gray-900 transition-all dark:text-gray-100 sm:w-auto"
+              asChild
+              className="themed-secondary-action group flex h-10 w-full items-center justify-center gap-2 rounded-md px-5 text-sm font-medium text-gray-900 transition-all dark:text-gray-100 sm:w-auto"
             >
-              <span className="bg-gradient-to-r from-[#14F195] to-[#9945FF] bg-clip-text text-transparent group-hover:opacity-80 transition-opacity">
-                {t('donate.learn')}
-              </span>
-              <ArrowRight className="h-4 w-4 text-[#9945FF]/70" />
+              <a href="https://solana.com" target="_blank" rel="noopener noreferrer">
+                <span className="bg-gradient-to-r from-[#14F195] to-[#9945FF] bg-clip-text text-transparent transition-opacity group-hover:opacity-80">
+                  {t('donate.learn')}
+                </span>
+                <ArrowRight className="h-4 w-4 text-[#9945FF]/70" />
+              </a>
             </Button>
           </DialogFooter>
         </div>

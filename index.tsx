@@ -6,6 +6,7 @@ import App from './App';
 import './i18n';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
+import { ExternalLinkWarningProvider } from './components/ExternalLinkWarning';
 
 // 应用挂载点：Vite 默认注入 #root。
 // App mount point: Vite injects #root by default.
@@ -19,7 +20,9 @@ root.render(
   <React.StrictMode>
     <ThemeProvider>
       <BrowserRouter>
-        <App />
+        <ExternalLinkWarningProvider>
+          <App />
+        </ExternalLinkWarningProvider>
       </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>
