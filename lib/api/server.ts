@@ -69,18 +69,9 @@ export const getVisibleBoards = async () => {
 export const getThreads = async (boardId: string, page = 1, query?: string) => {
   const params = new URLSearchParams({ boardId, page: String(page) });
   const trimmedQuery = query?.trim();
-  if (trimmedQuery) {
-    params.set('q', trimmedQuery);
-    return request<PaginatedThreads>(`/api/threads?${params.toString()}`, {
-      cache: 'no-store',
-    });
-  }
-
+  if (trimmedQuery) params.set('q', trimmedQuery);
   return request<PaginatedThreads>(`/api/threads?${params.toString()}`, {
-    next: {
-      revalidate: page === 1 ? 60 : 300,
-      tags: [cacheTags.threads, cacheTags.board(boardId), cacheTags.boardPage(boardId, page)],
-    },
+    cache: 'no-store',
   });
 };
 
