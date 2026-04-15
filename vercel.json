@@ -12,8 +12,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://backend-7ch.onrender.com/api/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/:path*", "destination": "https://backend-7ch.onrender.com/api/:path*" }
   ],
   "redirects": [
     { "source": "/test/read.cgi/:boardId/:threadId", "destination": "/board/:boardId/thread/:threadId", "statusCode": 301 }
