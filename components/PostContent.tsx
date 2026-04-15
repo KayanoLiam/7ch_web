@@ -224,7 +224,7 @@ export const PostContent: React.FC<PostContentProps> = ({
             <blockquote className="my-2 border-l-4 border-gray-300 pl-3 text-gray-700 dark:border-gray-600 dark:text-gray-300">{children}</blockquote>
           ),
           pre: ({ children }) => <div className="my-2">{children}</div>,
-          code: ({ inline, className: codeClassName, children, ...props }) => {
+          code: ({ inline, className: codeClassName, children, ...props }: React.HTMLAttributes<HTMLElement> & { inline?: boolean }) => {
             if (inline) {
               return (
                 <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.92em] dark:bg-gray-800 dark:text-gray-100" {...props}>

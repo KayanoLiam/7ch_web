@@ -26,12 +26,19 @@ const variantOptions: Array<{
 interface ThemeSwitcherProps {
   compact?: boolean;
   fullWidth?: boolean;
+  labels?: Record<string, string>;
   onSelect?: () => void;
 }
 
-export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, fullWidth = false, onSelect }) => {
+export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, fullWidth = false, labels, onSelect }) => {
   const { t } = useTranslation();
   const { theme, themeVariant, setTheme, setThemeVariant } = useTheme();
+  const [hasHydrated, setHasHydrated] = React.useState(false);
+  const text = (key: string) => (labels && !hasHydrated ? labels[key] ?? key : t(key));
+
+  React.useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
   return (
     <div
@@ -40,13 +47,13 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, f
         fullWidth ? 'flex w-full' : 'inline-flex',
         compact && !fullWidth ? 'items-center gap-2' : 'flex-col items-stretch gap-2'
       )}
-      aria-label={t('theme.title')}
+      aria-label={text('theme.title')}
     >
       <div className={cn('flex items-center gap-2', compact && !fullWidth ? 'shrink-0' : 'justify-between')}>
         {!compact && (
           <span className="inline-flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             <Brush className="h-3.5 w-3.5" />
-            {t('theme.variant.title')}
+            {text('theme.variant.title')}
           </span>
         )}
         <div
@@ -56,7 +63,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, f
             fullWidth && 'w-full'
           )}
           role="group"
-          aria-label={t('theme.variant.title')}
+          aria-label={text('theme.variant.title')}
         >
           {variantOptions.map(({ value, labelKey }) => {
             const active = themeVariant === value;
@@ -78,7 +85,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, f
                     : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'
                 )}
               >
-                {t(labelKey)}
+                {text(labelKey)}
               </button>
             );
           })}
@@ -88,7 +95,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, f
       <div className={cn('flex items-center gap-2', compact && !fullWidth ? 'shrink-0' : 'justify-between')}>
         {!compact && (
           <span className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {t('theme.mode.title')}
+            {text('theme.mode.title')}
           </span>
         )}
         <div
@@ -98,7 +105,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, f
             fullWidth && 'w-full'
           )}
           role="group"
-          aria-label={t('theme.mode.title')}
+          aria-label={text('theme.mode.title')}
         >
           {modeOptions.map(({ value, icon: Icon, labelKey }) => {
             const active = theme === value;
@@ -111,7 +118,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, f
                   onSelect?.();
                 }}
                 aria-pressed={active}
-                title={t(labelKey)}
+                title={text(labelKey)}
                 className={cn(
                   'inline-flex h-8 items-center justify-center rounded-[0.85rem] transition-all',
                   compact && !fullWidth ? 'w-8' : '',
@@ -123,7 +130,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ compact = false, f
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {!compact && <span>{t(labelKey)}</span>}
+                {!compact && <span>{text(labelKey)}</span>}
               </button>
             );
           })}

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 import { Navigate, useNavigate, useParams, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { api, apiBaseUrl, useMock as isMockMode } from './services/api';
-import { Board, Thread } from './types';
+import { Board, Thread, ThreadDetail } from './types';
 import { JobMetaSummary } from './components/JobMetaSummary';
 import { Button } from './components/ui/button';
 import { DonateModal } from './components/DonateModal';
@@ -58,34 +58,34 @@ const mergeBoardsWithStatic = (sourceBoards: Board[]) => {
 };
 
 const DocsPage = lazy(() =>
-  import('./pages/Docs').then((module) => ({ default: module.Docs }))
+  import('./legacy-pages/Docs').then((module) => ({ default: module.Docs }))
 );
 const PrivacyPolicyPage = lazy(() =>
-  import('./pages/PrivacyPolicy').then((module) => ({ default: module.PrivacyPolicy }))
+  import('./legacy-pages/PrivacyPolicy').then((module) => ({ default: module.PrivacyPolicy }))
 );
 const TermsPage = lazy(() =>
-  import('./pages/Terms').then((module) => ({ default: module.Terms }))
+  import('./legacy-pages/Terms').then((module) => ({ default: module.Terms }))
 );
 const HelpPage = lazy(() =>
-  import('./pages/Help').then((module) => ({ default: module.Help }))
+  import('./legacy-pages/Help').then((module) => ({ default: module.Help }))
 );
 const QAPage = lazy(() =>
-  import('./pages/QA').then((module) => ({ default: module.QA }))
+  import('./legacy-pages/QA').then((module) => ({ default: module.QA }))
 );
 const ChangelogPage = lazy(() =>
-  import('./pages/Changelog').then((module) => ({ default: module.Changelog }))
+  import('./legacy-pages/Changelog').then((module) => ({ default: module.Changelog }))
 );
 const RateLimitedPage = lazy(() =>
-  import('./pages/RateLimited').then((module) => ({ default: module.RateLimited }))
+  import('./legacy-pages/RateLimited').then((module) => ({ default: module.RateLimited }))
 );
 const ServicePausedPage = lazy(() =>
-  import('./pages/ServicePaused').then((module) => ({ default: module.ServicePaused }))
+  import('./legacy-pages/ServicePaused').then((module) => ({ default: module.ServicePaused }))
 );
 const CommonLinksBoardPage = lazy(() =>
-  import('./pages/CommonLinks').then((module) => ({ default: module.CommonLinksBoard }))
+  import('./legacy-pages/CommonLinks').then((module) => ({ default: module.CommonLinksBoard }))
 );
 const CommonLinkDetailPage = lazy(() =>
-  import('./pages/CommonLinks').then((module) => ({ default: module.CommonLinkDetail }))
+  import('./legacy-pages/CommonLinks').then((module) => ({ default: module.CommonLinkDetail }))
 );
 const ThreadViewPage = lazy(() =>
   import('./components/ThreadDetail').then((module) => ({ default: module.ThreadView }))
@@ -580,7 +580,7 @@ const FavoritesView: React.FC<{
         const ids = Array.from(followedThreads);
         const results = await Promise.allSettled(ids.map(id => api.getThreadContent(id)));
         const validThreads = results
-          .filter((result): result is PromiseFulfilledResult<Thread> => result.status === 'fulfilled')
+          .filter((result): result is PromiseFulfilledResult<ThreadDetail> => result.status === 'fulfilled')
           .map(result => result.value);
         const redirectPath = results.reduce<string | null>((matchedPath, result) => {
           if (matchedPath || result.status !== 'rejected') return matchedPath;

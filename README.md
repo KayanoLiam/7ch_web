@@ -90,8 +90,11 @@ npm run dev
 ```
 
 默认情况下：
-- 如果 `VITE_USE_MOCK=true`，则直接使用本地 Mock（LocalStorage）。
-- 如果 `VITE_USE_MOCK=false`，则连接真实后端（`VITE_API_BASE_URL` 或默认回退地址）。
+- `npm run dev` 启动的是旧 Vite SPA。
+- `npm run next:dev` 启动的是当前迁移中的 Next App Router 版本。
+- 旧 Vite SPA 下：
+  - 如果 `VITE_USE_MOCK=true`，则直接使用本地 Mock（LocalStorage）。
+  - 如果 `VITE_USE_MOCK=false`，则连接真实后端（`VITE_API_BASE_URL` 或本地默认回退地址）。
 
 ### 3. 构建与预览
 
@@ -107,24 +110,30 @@ npm run preview
 
 ---
 
-## 环境变量（前端）
+## 环境变量
 
-使用 `.env.local` 或 Vercel 环境变量：
+使用 `.env.local` 或部署平台环境变量。推荐以 Next 变量为主，旧的 `VITE_*` 变量只作为兼容旧 SPA 构建的别名保留。
 
 ```
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+BACKEND_API_BASE_URL=http://localhost:8080
+REVALIDATE_SECRET=replace-me
+
+# Legacy SPA compatibility
 VITE_API_BASE_URL=http://localhost:8080
 VITE_USE_MOCK=false
 VITE_FORCE_SERVICE_PAUSED=false
 ```
 
 规则说明：
+- `NEXT_PUBLIC_SITE_URL`：Next metadata / canonical / sitemap 使用的正式站点 URL。生产环境必须设置。
+- `BACKEND_API_BASE_URL`：Next Server Components、Route Handlers、sitemap、metadata 获取后端数据时使用。生产环境必须设置。
+- `REVALIDATE_SECRET`：`/api/revalidate` webhook 鉴权令牌。生产环境必须设置。
 - `VITE_USE_MOCK=true`：强制使用 `services/mockService.ts`（LocalStorage 模拟）。
 - `VITE_USE_MOCK=false`：使用真实 API。
 - `VITE_FORCE_SERVICE_PAUSED=true`：前端本地强制把真实 API 请求视为“服务暂停”，便于联调 `/service-paused` 页面与错误跳转。
-- `VITE_API_BASE_URL` 未设置时：
-  - 若部署在 `*.vercel.app`，运行时代码会自动回退到 `https://backend-7ch.onrender.com`。
-  - 否则回退到 `http://localhost:8080`。
-- Vercel 部署配置中还包含一条同源 `/api/:path*` rewrite，目标为 `https://backend-7ch.onrender.com/api/:path*`；这属于平台层转发规则，与前端运行时代码中的 `apiBaseUrl` 回退逻辑是两套独立配置。
+- `VITE_API_BASE_URL` 只供旧 Vite SPA 使用，不再参与 Next App Router 的正式部署配置。
+- Next 生产环境下如果缺少 `NEXT_PUBLIC_SITE_URL` 或 `BACKEND_API_BASE_URL`，服务端会直接报错而不是静默回退到错误地址。
 
 ---
 
@@ -256,7 +265,16 @@ Mock 的特性：
 
 ### Q: 线上怎么保证用的是后端？
 - 确保 `VITE_USE_MOCK=false`。
-- 在 Vercel 配置 `VITE_API_BASE_URL` 指向 Render 后端地址。
+- 为 Next 服务端配置 `BACKEND_API_BASE_URL`。
+- 实时通知现在通过 Next 的同源 `/api/events` 代理转发到后端，不再要求公开浏览器侧后端地址。
+- 配置 `NEXT_PUBLIC_SITE_URL`，保证 canonical、sitemap、Open Graph 指向正式域名。
+
+### Q: `/api/revalidate` 怎么用？
+- 设置 `REVALIDATE_SECRET`。
+- 以 `Authorization: Bearer <REVALIDATE_SECRET>` 调用。
+- 目前支持的事件：
+  - `thread_created`：需要 `boardId`
+  - `post_created`：需要 `boardId` 和 `threadId`
 
 ---
 

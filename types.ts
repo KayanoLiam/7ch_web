@@ -123,6 +123,18 @@ export interface PaginatedThreads {
   totalPages: number;
 }
 
+export interface SeoThread {
+  id: string;
+  boardId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SeoThreadsPage {
+  threads: SeoThread[];
+  nextCursor?: string;
+}
+
 // API 契约 / API contract
 export interface I7chAPI {
   getBoards(): Promise<Board[]>;
