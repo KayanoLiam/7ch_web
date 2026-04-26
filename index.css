@@ -566,6 +566,171 @@
     border-radius: calc(var(--radius) + 0.8rem);
     box-shadow: var(--card-shadow-strong);
   }
+
+  @media (min-width: 1024px) {
+    .bbs-desktop-page {
+      --background: 224 14% 8%;
+      --foreground: 220 18% 92%;
+      --card: 224 13% 11%;
+      --card-foreground: 220 18% 92%;
+      --secondary: 224 11% 15%;
+      --secondary-foreground: 220 18% 92%;
+      --muted: 224 10% 16%;
+      --muted-foreground: 220 8% 70%;
+      --accent: 224 10% 17%;
+      --accent-foreground: 220 18% 92%;
+      --border: 224 8% 25%;
+      --input: 224 8% 24%;
+      --ring: 333 84% 58%;
+      --link: 220 18% 92%;
+      --link-hover: 333 84% 64%;
+      --brand: 333 84% 58%;
+      --brand-strong: 333 84% 64%;
+      --page: 224 14% 7%;
+      --surface: 224 12% 12%;
+      --surface-muted: 224 11% 15%;
+      --surface-elevated: 224 11% 18%;
+      --soft-foreground: 220 8% 72%;
+      --card-shadow-subtle: 0 0 0 1px rgba(255, 255, 255, 0.04);
+      --card-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+      --card-shadow-strong: 0 24px 64px rgba(0, 0, 0, 0.42);
+      background:
+        linear-gradient(180deg, hsl(224 14% 8%), hsl(224 13% 7%));
+    }
+
+    .bbs-desktop-header {
+      border-bottom-color: hsl(224 8% 25% / 0.9);
+      background-color: hsl(224 14% 8% / 0.92);
+      color: hsl(220 18% 92%);
+    }
+
+    .bbs-desktop-header .themed-brandmark,
+    .bbs-desktop-header .themed-nav-link {
+      color: hsl(220 18% 92%);
+    }
+
+    .bbs-desktop-header .themed-search-field {
+      border-color: hsl(224 8% 25%);
+      background-color: hsl(224 11% 15% / 0.9);
+      color: hsl(220 18% 92%);
+    }
+
+    .bbs-desktop-header .themed-search-kbd {
+      border-color: hsl(224 8% 28%);
+      background-color: hsl(224 10% 18%);
+      color: hsl(220 8% 72%);
+    }
+
+    .bbs-desktop-footer {
+      border-top-color: hsl(224 8% 25% / 0.9);
+      background-color: hsl(224 12% 10%);
+      color: hsl(220 8% 72%);
+    }
+
+    .bbs-desktop-footer .themed-nav-link {
+      color: hsl(220 18% 92%);
+    }
+
+    .bbs-desktop-rail {
+      min-height: 500px;
+      border: 1px solid hsl(var(--border));
+      background-color: hsl(var(--surface) / 0.74);
+      color: hsl(var(--foreground));
+      border-radius: 8px;
+      padding: 1.35rem 1rem;
+      box-shadow: var(--card-shadow-subtle);
+      backdrop-filter: blur(18px);
+    }
+
+    .bbs-desktop-rail-title {
+      margin-bottom: 1.15rem;
+      padding-inline: 0.35rem;
+      color: hsl(var(--foreground));
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .bbs-desktop-board-link {
+      display: block;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 0.9rem 0.85rem;
+      color: hsl(var(--foreground));
+      transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease;
+    }
+
+    .bbs-desktop-board-link:hover {
+      background-color: hsl(var(--surface-elevated) / 0.62);
+      color: hsl(var(--foreground));
+      text-decoration: none;
+    }
+
+    .bbs-desktop-board-link-active {
+      border-color: hsl(var(--brand));
+      color: hsl(var(--brand));
+      box-shadow: inset 3px 0 0 hsl(var(--brand));
+    }
+
+    .bbs-desktop-board-name,
+    .bbs-desktop-board-desc {
+      display: block;
+    }
+
+    .bbs-desktop-board-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .bbs-desktop-board-desc {
+      margin-top: 0.3rem;
+      color: hsl(var(--soft-foreground));
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .bbs-desktop-action-button,
+    .bbs-desktop-select-button,
+    .bbs-desktop-icon-button {
+      display: inline-flex;
+      min-height: 2.25rem;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid hsl(var(--border));
+      background-color: hsl(var(--surface-muted) / 0.88);
+      color: hsl(var(--foreground));
+      border-radius: 7px;
+      box-shadow: var(--card-shadow-subtle);
+      transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease;
+    }
+
+    .bbs-desktop-action-button,
+    .bbs-desktop-select-button {
+      gap: 0.55rem;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .bbs-desktop-icon-button {
+      width: 2.35rem;
+    }
+
+    .bbs-desktop-action-button:hover,
+    .bbs-desktop-select-button:hover,
+    .bbs-desktop-icon-button:hover {
+      border-color: hsl(var(--brand) / 0.55);
+      background-color: hsl(var(--surface-elevated));
+      color: hsl(var(--foreground));
+      text-decoration: none;
+    }
+  }
 }
 
 :root[data-theme-variant='claude'] .themed-brandmark,
