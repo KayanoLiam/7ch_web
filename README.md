@@ -1,120 +1,76 @@
-# 7ch - Anonymous BBS (Frontend)
+# 7ch Frontend
 
-7ch 是一个现代化匿名文本论坛（2ch/5ch 风格）的前端 SPA。本目录为前端工程，已实际部署到 Vercel；后端部署在 Render，数据库侧目前采用 `Neon + Supabase` 的双 PostgreSQL 方案。前端保留了完整的 Mock Service 以便在没有后端的情况下独立开发与演示，同时也包含 SSE 更新提示、服务暂停页、限流页、主题切换与一组静态工具/外链页面。
+Anonymous textboard frontend for 7ちゃんねる, built with Next.js App Router.
 
-本 README 聚焦 **前端工程** 的架构、运行与对接说明；后端 API 的完整实现细节请查看 `backend_7ch/README.md`。
+## Overview
 
-> 兼容性说明：
-> 前端当前已经隐藏日本打工栏目 `/baito/` 和订阅转换工具页 `/tools/convert`，并且直达工具页会重定向回首页。
-> 但后端仍保留对应的板块 ID、帖子数据结构以及订阅转换相关 API，以兼容既有数据、受控调用和后续恢复上线。
+7ch is a lightweight anonymous bulletin board inspired by classic textboard workflows. This repository contains the frontend application: board browsing, thread pages, posting forms, local user preferences, static documentation pages, SEO metadata, and same-origin API proxy routes for the Rust backend.
 
----
+The frontend is currently implemented with Next.js 15 and React 19. A Vite SPA entrypoint still exists in the repository for legacy compatibility, but the default build and Docker image use Next.js.
 
-## 项目定位与特性
+The primary backend lives in the sibling `backend_7ch/` project and is implemented with Rust and Actix Web. It provides boards, threads, posts, SSE events, SEO thread feeds, health checks, and subscription conversion APIs that are still retained for compatibility.
 
-- 经典文本板体验：板块、帖子列表、楼层、引用（>>123）等核心交互
-- 匿名机制展示：每日 ID、Tripcode（绊码）、Sage 下沉等传统 BBS 文化元素
-- 现代体验：移动端无限滚动 + 桌面端分页、关注/隐藏帖子、版本更新提示、文档与帮助页
-- 国际化：内置 `zh-CN` 与 `ja-JP` 文案资源，支持语言切换
-- 主题切换：支持 `light / dark / system`
-- 错误兜底：429 限流页、503 服务暂停页与显式跳转
-- 静态内容：只读的“常用链接”栏目与独立 changelog 页面
-- 可切换数据源：真实 API（Render）与本地 Mock（LocalStorage）一键切换
+## Features
 
----
+- Board index with backend-provided boards plus a static read-only links board.
+- Thread lists with pagination, mobile "load more", search query forwarding, reply counts, and view counts.
+- Thread detail pages with posts, daily IDs, tripcodes, quote interactions, and JSON-LD metadata.
+- Anonymous thread and reply forms backed by same-origin Next route handlers.
+- Local-only followed threads / favorites and hidden thread preferences.
+- Chinese and Japanese UI dictionaries with localized static page routing.
+- Theme modes for light, dark, and system preferences, plus theme variants.
+- Server-side metadata, sitemap generation, robots configuration, and dynamic Open Graph image support for threads.
+- Realtime notices through a same-origin `/api/events` SSE proxy.
+- Service pause and rate-limit handling pages.
+- Static pages for docs, help, QA, privacy, terms, changelog, and common external links.
+- Legacy redirects for old `read.cgi`-style thread URLs.
 
-## 线上部署
+## Tech Stack
 
-- **前端**：Vercel（单页应用）
-- **后端**：Render（Actix-web）
-- **数据库**：Neon + Supabase（后端统一读写路由与回补）
+- **Framework:** Next.js 15 App Router
+- **UI:** React 19, TypeScript
+- **Styling:** Tailwind CSS, tailwindcss-animate, CSS custom properties
+- **Components:** Radix UI primitives, Lucide React icons
+- **Content rendering:** react-markdown, remark-gfm, remark-breaks, react-syntax-highlighter
+- **Internationalization:** local dictionaries plus i18next/react-i18next for legacy client code
+- **Legacy build path:** Vite 6 + React Router 7
+- **Backend integration:** Rust / Actix Web API in `../backend_7ch`
+- **Deployment:** Vercel or Docker
 
-默认线上链接（代码内展示）：
-- 前端示例链接：`https://7ch-web.vercel.app`
-- 前端运行时代码在 `*.vercel.app` 下的 API 回退地址：`https://backend-7ch.onrender.com`
-- `vercel.json` 中的同源 `/api/*` rewrite 目标：`https://backend-7ch.onrender.com/api/*`
+## Screenshots / Demo
 
-> 注：前端可通过环境变量覆盖 API 地址，详见“环境变量”。
+No committed screenshots are currently present in this frontend repository.
 
----
+Recommended placeholders:
 
-## 技术栈
+- Home / board index
+- Board thread list
+- Thread detail page
+- Mobile layout
+- Dark theme
 
-- React 19 + TypeScript
-- Vite 6
-- React Router 7
-- Tailwind CSS + tailwindcss-animate
-- Radix UI（对话框、弹窗组件）
-- i18next + react-i18next（国际化）
-- Lucide React（图标）
-- class-variance-authority / clsx / tailwind-merge（样式组合）
+Known deployed URL referenced in project history: `https://7ch-web.vercel.app`
 
----
+## Getting Started
 
-## 目录结构一览
+### Prerequisites
 
-```
-.
-├── App.tsx                  # 主路由与页面骨架
-├── index.tsx                # 应用入口
-├── i18n.ts                  # 国际化资源与初始化
-├── pages/                   # 页面（Boards/Docs/Help/Tools 等）
-├── components/              # UI 与业务组件
-│   ├── ThemeSwitcher.tsx    # 主题切换控件
-│   └── theme-provider.tsx   # light/dark/system 主题状态
-├── services/
-│   ├── api.ts               # 真正 API 客户端（fetch）
-│   └── mockService.ts       # 本地 Mock（LocalStorage）
-├── data/                    # changelog、静态链接等前端内置内容
-├── lib/                     # 通用工具与 UI 基础能力
-├── scripts/                 # 构建前脚本（如 changelog 生成）
-├── types.ts                 # 前后端数据契约
-├── index.css                # 全局样式
-└── vite.config.ts           # 构建配置
-```
+- Node.js 20 or newer
+- npm
+- A running backend API for real data, usually `backend_7ch` on port `8080`
+- PostgreSQL and required backend environment variables if you run the Rust backend locally
 
----
+### Installation
 
-## 本地运行
-
-### 1. 安装依赖
-
-```
+```bash
+cd 7ch---anonymous-bbs
 npm install
+cp .env.example .env.local
 ```
 
-### 2. 启动开发环境
+Edit `.env.local` for your local backend:
 
-```
-npm run dev
-```
-
-默认情况下：
-- `npm run dev` 启动的是旧 Vite SPA。
-- `npm run next:dev` 启动的是当前迁移中的 Next App Router 版本。
-- 旧 Vite SPA 下：
-  - 如果 `VITE_USE_MOCK=true`，则直接使用本地 Mock（LocalStorage）。
-  - 如果 `VITE_USE_MOCK=false`，则连接真实后端（`VITE_API_BASE_URL` 或本地默认回退地址）。
-
-### 3. 构建与预览
-
-``` 
-npm run build
-npm run build:with-changelog
-npm run preview
-```
-
-补充说明：
-- `npm run build` 只执行 Vite 构建，不再改写 `data/changelog.ts`。
-- 如需刷新更新日志页面数据，再手动执行 `npm run update-changelog`，或使用 `npm run build:with-changelog`。
-
----
-
-## 环境变量
-
-使用 `.env.local` 或部署平台环境变量。推荐以 Next 变量为主，旧的 `VITE_*` 变量只作为兼容旧 SPA 构建的别名保留。
-
-```
+```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 BACKEND_API_BASE_URL=http://localhost:8080
 REVALIDATE_SECRET=replace-me
@@ -125,162 +81,231 @@ VITE_USE_MOCK=false
 VITE_FORCE_SERVICE_PAUSED=false
 ```
 
-规则说明：
-- `NEXT_PUBLIC_SITE_URL`：Next metadata / canonical / sitemap 使用的正式站点 URL。生产环境必须设置。
-- `BACKEND_API_BASE_URL`：Next Server Components、Route Handlers、sitemap、metadata 获取后端数据时使用。生产环境必须设置。
-- `REVALIDATE_SECRET`：`/api/revalidate` webhook 鉴权令牌。生产环境必须设置。
-- `VITE_USE_MOCK=true`：强制使用 `services/mockService.ts`（LocalStorage 模拟）。
-- `VITE_USE_MOCK=false`：使用真实 API。
-- `VITE_FORCE_SERVICE_PAUSED=true`：前端本地强制把真实 API 请求视为“服务暂停”，便于联调 `/service-paused` 页面与错误跳转。
-- `VITE_API_BASE_URL` 只供旧 Vite SPA 使用，不再参与 Next App Router 的正式部署配置。
-- Next 生产环境下如果缺少 `NEXT_PUBLIC_SITE_URL` 或 `BACKEND_API_BASE_URL`，服务端会直接报错而不是静默回退到错误地址。
+### Run Locally
 
----
+Start the frontend:
 
-## API 对接说明（前端视角）
+```bash
+npm run dev
+```
 
-前端的类型契约定义在 `types.ts`，其中包括：
-- `Board`：板块信息
-- `Thread`：帖子列表项（含 OP 预览）
-- `ThreadDetail`：帖子详情（含楼层）
-- `CreateThreadRequest / CreatePostRequest`：发帖与回帖请求体
-- `SubscriptionConvertRequest / SubscriptionConvertResponse`：订阅转换请求与响应
+`npm run dev` starts the legacy Vite development server on port `3000`. For the current Next.js App Router application, use:
 
-核心调用在 `services/api.ts`：
+```bash
+npm run next:dev
+```
 
-- `GET /api/boards`
-- `GET /api/threads?boardId=xxx&page=1`
-- `GET /api/threads/:threadId`
-- `POST /api/threads`
-- `POST /api/posts`
-- `POST /api/subscription/convert`（当前仅 `clash -> sing-box`，前端已隐藏入口但 API 仍保留）
-- `POST /api/subscription/link`（生成安全订阅链接，前端已隐藏入口但 API 仍保留）
-- `GET /api/sub?token=...`（通过安全 token 获取转换后订阅内容）
+The Next app also defaults to port `3000`. If you run both development servers, start one of them on a different port.
 
-响应字段采用 **camelCase**，与 TypeScript 类型保持一致。
+Start the Rust backend from the sibling project:
 
-补充：
-- 后端 `GET /api/boards` 仍可能返回 `baito`；前端会在 UI 层主动过滤该板块。
-- 订阅转换相关客户端方法和类型契约仍保留在前端代码中，但不再对普通用户公开展示。
+```bash
+cd ../backend_7ch
+cargo run
+```
 
----
+The backend listens on `0.0.0.0:8080` by default.
 
-## 页面与路由
+## Scripts
 
-当前前端除常规板块页外，还包含一批文档、状态页和只读内容页：
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the legacy Vite development server. |
+| `npm run next:dev` | Start the Next.js development server. |
+| `npm run build` | Build the Next.js application. |
+| `npm run next:build` | Explicit alias for `next build`. |
+| `npm run next:start` | Start the built Next.js app. |
+| `npm run vite:build` | Build the legacy Vite SPA. |
+| `npm run vite:build:with-changelog` | Regenerate changelog data, then build the Vite SPA. |
+| `npm run preview` | Preview the Vite build. |
+| `npm run update-changelog` | Update `data/changelog.ts` from Git history. |
 
-- `/`：首页板块列表
-- `/board/:boardId`：板块页
-- `/board/:boardId/thread/:threadId`：线程详情页
-- `/favorites`：收藏线程页
-- `/board/links`：常用链接只读栏目
-- `/board/links/thread/:linkId`：静态链接详情页
-- `/docs`：技术文档页
-- `/help`：使用须知
-- `/QA`：常见问题
-- `/privacy`：隐私政策
-- `/terms`：用户协议
-- `/changelog`：更新日志
-- `/service-paused`：服务暂停说明页
-- `/rate-limited`：限流说明页
+## Environment Variables
 
-补充：
-- `Common Links` 是前端内置的静态只读栏目，会和真实后端返回的板块列表合并显示。
-- `/baito/` 与 `/tools/convert` 当前已从前端公开导航中移除。
-- 直接访问 `/tools/convert` 会被前端重定向回首页；订阅转换 API 本身仍在后端保留。
-- `vercel.json` 还保留了旧式 `/test/read.cgi/:boardId/:threadId` 到新线程路由的 301 重定向。
+| Variable | Required | Used by | Description |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Required in production | Next.js | Public site origin used by metadata, canonical URLs, sitemap, and Open Graph output. |
+| `BACKEND_API_BASE_URL` | Required in production | Next.js server/runtime | Backend API origin. The value may include or omit a trailing `/api`; the app normalizes it. |
+| `REVALIDATE_SECRET` | Required for revalidation webhook | Next.js route handler | Bearer token for `POST /api/revalidate`. |
+| `VITE_API_BASE_URL` | Legacy only | Vite SPA | Backend API origin for legacy client-side API calls. |
+| `VITE_USE_MOCK` | Legacy only | Vite SPA | Set to `true` to use the LocalStorage mock service. |
+| `VITE_FORCE_SERVICE_PAUSED` | Legacy only | Vite SPA | Set to `true` to force service-pause handling in the legacy client. |
+| `VITE_DEV_HOST` | Optional | Vite dev server | Override Vite host, for example `0.0.0.0`. |
+| `VITE_USE_POLLING` | Optional | Vite dev server | Force file watcher polling. Defaults to polling on mounted volumes. |
+| `VITE_POLLING_INTERVAL` | Optional | Vite dev server | Polling interval in milliseconds. |
 
----
+The repository includes `.env.example`. A workspace-level `.env.example` also exists one directory above and is intended for the Docker Compose setup.
 
-## 实时更新与错误处理
+## Project Structure
 
-- 非 Mock 模式下，前端会通过 `EventSource` 订阅 `GET /api/events`。
-- 当前会消费的 SSE 事件包括：
-  - `server_version`
-  - `thread_created`
-  - `post_created`
-  - `resync`
-- 线程页在 SSE 断开时会退回到轮询刷新。
-- 最近一次已确认的服务端版本会存入 `localStorage`，键名：`7ch_server_version`。
-- 当真实 API 返回 `429` 时，前端会解析 `Retry-After` 并跳转到 `/rate-limited`。
-- 当真实 API 返回 `503` 且错误码为 `database_unavailable`，或启用了 `VITE_FORCE_SERVICE_PAUSED=true` 时，前端会跳转到 `/service-paused`。
+```text
+7ch---anonymous-bbs/
+├── app/                         # Next.js App Router pages, metadata, sitemaps, and API route proxies
+│   ├── api/                     # Same-origin API routes for events, posts, threads, and revalidation
+│   ├── board/                   # Board and thread routes
+│   ├── docs/ help/ QA/          # Static information pages
+│   └── layout.tsx               # Root layout, providers, header, footer, realtime notices
+├── components/                  # Shared React components and UI primitives
+├── components/ui/               # Small Radix/shadcn-style UI primitives
+├── data/                        # Changelog data and static common links
+├── features/                    # Feature-oriented server and client components
+├── legacy-pages/                # Legacy page components retained for compatibility
+├── lib/                         # API clients, constants, i18n, SEO, routing, and utility code
+├── scripts/                     # Maintenance scripts such as changelog generation
+├── services/                    # Legacy Vite API client and LocalStorage mock service
+├── Dockerfile                   # Production Next.js Docker image
+├── middleware.ts                # Locale routing middleware for static pages
+├── next.config.mjs              # Next.js config, redirects, and security headers
+├── tailwind.config.js           # Tailwind theme configuration
+├── vite.config.ts               # Legacy Vite config
+└── types.ts                     # Shared frontend/backend TypeScript contracts
+```
 
----
+## API Overview
 
-## Mock Service 说明
+The Next.js frontend talks to the Rust backend through server-side helpers in `lib/api/server.ts` and through same-origin route handlers under `app/api/`.
 
-`services/mockService.ts` 提供完整的本地数据模拟，适用于：
+### Frontend Route Handlers
 
-- 后端未完成时的前端独立开发
-- 演示与功能验证
-- 离线运行
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/threads?boardId=:boardId&page=:page&q=:query` | Proxy thread list requests to the backend. |
+| `POST` | `/api/threads` | Create a thread, then revalidate board caches. |
+| `GET` | `/api/threads/:threadId?trackView=false` | Proxy thread detail requests to the backend. |
+| `POST` | `/api/posts` | Create a reply, then revalidate thread and board caches. |
+| `GET` | `/api/events` | Proxy backend Server-Sent Events as a same-origin event stream. |
+| `POST` | `/api/revalidate` | Revalidate cache tags for `thread_created` and `post_created` events. |
 
-Mock 的特性：
-- 使用 LocalStorage 作为“数据库”
-- 模拟每日 ID、Tripcode 与 Sage 行为
-- 自动生成本地设备 UUID
+`POST /api/revalidate` requires:
 
-注意：Mock 模式下的数据仅存于浏览器本地，清除缓存会丢失。
+```http
+Authorization: Bearer <REVALIDATE_SECRET>
+Content-Type: application/json
+```
 
----
+Accepted bodies:
 
-## 主题、国际化与本地偏好
+```json
+{ "event": "thread_created", "boardId": "general" }
+```
 
-资源定义在 `i18n.ts`，当前内置：
-- `zh-CN`
-- `ja-JP`
+```json
+{ "event": "post_created", "boardId": "general", "threadId": "thread-id" }
+```
 
-- 语言偏好使用 `localStorage` 持久化，键名：`7ch_lang`
-- 主题支持 `light / dark / system`，键名：`7ch_theme`
-- 隐藏线程列表键名：`7ch_hidden_threads`
-- 关注线程列表键名：`7ch_followed_threads`
+### Backend API Expected by the Frontend
 
-前端支持对线程进行：
-- 隐藏（不再显示）
-- 关注（收藏）
+| Method | Path | Notes |
+| --- | --- | --- |
+| `GET` | `/healthz` | Backend liveness check. |
+| `GET` | `/api/boards` | Board list. |
+| `GET` | `/api/threads` | Paginated thread list; supports `boardId`, `page`, and `q`. |
+| `GET` | `/api/threads/{thread_id}` | Thread detail; supports `trackView`. |
+| `POST` | `/api/threads` | Create a thread. |
+| `POST` | `/api/posts` | Create a reply. |
+| `GET` | `/api/events` | SSE stream. |
+| `GET` | `/api/seo/threads` | Cursor-based thread feed used for sitemap generation. |
+| `POST` | `/api/subscription/convert` | Retained by backend for compatibility; the frontend page is hidden. |
+| `POST` | `/api/subscription/link` | Retained by backend for compatibility; the frontend page is hidden. |
+| `GET` | `/api/sub` | Retained by backend for compatibility. |
 
-主题系统通过 `ThemeProvider` 挂在应用根部，会同步 HTML 根节点的 `dark` class、`data-theme` 与 `color-scheme`。
+Data contracts are defined in `types.ts` and use camelCase response fields.
 
----
+## Deployment
 
-## 部署补充
+### Vercel
 
-`vercel.json` 当前还负责一部分生产行为：
+The project can be deployed as a standard Next.js application. Configure at least:
 
-- 为全站附加安全响应头：
-  - `Content-Security-Policy: frame-ancestors 'none'; object-src 'none'; base-uri 'self'`
-  - `Referrer-Policy: no-referrer`
-  - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options: DENY`
-  - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
-- 把同源 `/api/:path*` 转发到 Render
-- 把历史路径 `/test/read.cgi/:boardId/:threadId` 重定向到新的 SPA 线程地址
+```env
+NEXT_PUBLIC_SITE_URL=https://your-domain.example
+BACKEND_API_BASE_URL=https://your-backend.example
+REVALIDATE_SECRET=<strong-random-token>
+```
 
----
+`next.config.mjs` defines security headers and redirects:
 
-## 常见问题
+- `/test/read.cgi/:boardId/:threadId` -> `/board/:boardId/thread/:threadId`
+- `/tools/convert` -> `/`
 
-### Q: 为什么前端还保留 Mock？
-因为前端在后端开发前就需要完成 UI 与交互验证。Mock 是开发与演示的安全兜底，不影响线上真实 API 使用。
+`vercel.json` also contains security headers, a legacy `/api/:path*` rewrite to the Render backend, and the old `read.cgi` redirect. Keep it aligned with `next.config.mjs` if deployment behavior changes.
 
-### Q: 线上怎么保证用的是后端？
-- 确保 `VITE_USE_MOCK=false`。
-- 为 Next 服务端配置 `BACKEND_API_BASE_URL`。
-- 实时通知现在通过 Next 的同源 `/api/events` 代理转发到后端，不再要求公开浏览器侧后端地址。
-- 配置 `NEXT_PUBLIC_SITE_URL`，保证 canonical、sitemap、Open Graph 指向正式域名。
+### Docker
 
-### Q: `/api/revalidate` 怎么用？
-- 设置 `REVALIDATE_SECRET`。
-- 以 `Authorization: Bearer <REVALIDATE_SECRET>` 调用。
-- 目前支持的事件：
-  - `thread_created`：需要 `boardId`
-  - `post_created`：需要 `boardId` 和 `threadId`
+Build the frontend image:
 
----
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3000 \
+  --build-arg BACKEND_API_BASE_URL=http://backend:8080 \
+  --build-arg REVALIDATE_SECRET=replace-me \
+  -t 7ch-frontend .
+```
 
-## 贡献与维护
+Run it:
 
-该项目由作者独立完成。欢迎提出 Issue 或 PR，尤其是以下方向：
-- 更完整的国际化文案
-- UI/交互优化
-- 更丰富的管理与审核工具
+```bash
+docker run --rm -p 3000:3000 \
+  -e NEXT_PUBLIC_SITE_URL=http://localhost:3000 \
+  -e BACKEND_API_BASE_URL=http://host.docker.internal:8080 \
+  -e REVALIDATE_SECRET=replace-me \
+  7ch-frontend
+```
+
+From the workspace root, `docker-compose.yml` can build and run both the frontend and `backend_7ch` service:
+
+```bash
+cd ..
+cp .env.example .env
+docker compose up --build
+```
+
+The Compose setup expects backend database credentials in the workspace `.env`.
+
+## Testing and Quality
+
+There is no dedicated frontend test suite currently committed. For frontend changes, run at least:
+
+```bash
+npm run build
+```
+
+For backend contract changes, run the Rust backend tests from `../backend_7ch`:
+
+```bash
+cargo test
+```
+
+## Roadmap
+
+The codebase suggests these active or likely maintenance areas:
+
+- Continue the migration from legacy Vite SPA code to the Next.js App Router implementation.
+- Keep frontend API contracts aligned with the Rust backend.
+- Add focused frontend tests for forms, route handlers, preferences, and i18n behavior.
+- Add real project screenshots or demo GIFs.
+- Improve operational documentation for cache revalidation and production deployment.
+
+## Contributing
+
+Issues and pull requests are welcome. Please keep changes scoped and include the project area touched in your description.
+
+Before opening a PR:
+
+- Run `npm run build` for frontend changes.
+- Run `cargo test` in `../backend_7ch` when backend API behavior is affected.
+- Include screenshots or screen recordings for visible UI changes.
+- Document new environment variables and API contract changes.
+- Keep behavior aligned with the Rust backend if you touch legacy API clients or shared types.
+
+The Git history uses Conventional Commit-style messages such as `feat:`, `fix:`, `docs:`, and `chore:`.
+
+## License
+
+Apache License 2.0. See [LICENSE](./LICENSE).
+
+## Author
+
+Maintained by the repository owner.
+
+Contact address referenced by the application QA page: `Piercekaoru@proton.me`.
